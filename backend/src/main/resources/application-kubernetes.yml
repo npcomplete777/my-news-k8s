@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-service.anon-news.svc.cluster.local:5432/anonnews
+    username: ${DB_USERNAME:anonnews}
+    password: ${DB_PASSWORD:anonnews}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+
+management:
+  metrics:
+    export:
+      otlp:
+        # In-cluster, the Dash0 operator injects the collector endpoint
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://dash0-operator-opentelemetry-collector.dash0-operator.svc.cluster.local:4318}/v1/metrics
+
+server:
+  port: 8080
+
+# Override poller cron for k8s (potentially different cadence)
+poller:
+  sources:
+    reddit:
+      cron: "0 */5 * * * *"
+    hackernews:
+      cron: "0 */3 * * * *"
+    devto:
+      cron: "0 */10 * * * *"
+    github-releases:
+      cron: "0 0 * * * *"
+    lobsters:
+      cron: "0 */10 * * * *"
+    rss:
+      cron: "0 */15 * * * *"
+
+# API keys from Kubernetes Secrets
+auth:
+  api-key:
+    enabled: true

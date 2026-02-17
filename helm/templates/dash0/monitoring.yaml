@@ -1,0 +1,16 @@
+{{- if .Values.dash0.enabled -}}
+apiVersion: operator.dash0.com/v1beta1
+kind: Dash0Monitoring
+metadata:
+  name: dash0-monitoring
+  namespace: {{ .Release.Namespace }}
+spec:
+  instrumentWorkloads:
+    mode: all
+  logCollection:
+    enabled: true
+  eventCollection:
+    enabled: true
+  prometheusScraping:
+    enabled: true
+{{- end }}

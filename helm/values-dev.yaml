@@ -1,0 +1,7 @@
+backend:
+  replicas: 1
+frontend:
+  replicas: 1
+postgres:
+  auth:
+    password: dev-password-change-me

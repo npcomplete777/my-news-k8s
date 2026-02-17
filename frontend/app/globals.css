@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-zinc-950;
+  }
+
+  ::selection {
+    @apply bg-amber-500/30 text-amber-50;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zinc-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-zinc-700 hover:bg-zinc-600;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 transition-all duration-200
+           hover:border-zinc-700 hover:bg-zinc-900;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white
+           transition-colors hover:bg-amber-500 focus:outline-none focus:ring-2
+           focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900;
+  }
+
+  .btn-ghost {
+    @apply rounded-lg px-3 py-2 text-sm font-medium text-zinc-400
+           transition-colors hover:bg-zinc-800 hover:text-zinc-200;
+  }
+
+  .input {
+    @apply rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100
+           placeholder-zinc-500 transition-colors focus:border-amber-500 focus:outline-none
+           focus:ring-1 focus:ring-amber-500;
+  }
+
+  .tag-pill {
+    @apply inline-flex items-center rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs
+           font-medium text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded bg-zinc-800;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -1,0 +1,77 @@
+backend:
+  replicas: 1
+  image:
+    repository: anon-news-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 768Mi
+    limits:
+      cpu: "2"
+      memory: 1536Mi
+  env:
+    SPRING_PROFILES_ACTIVE: kubernetes
+    SPRING_THREADS_VIRTUAL_ENABLED: "true"
+    JAVA_TOOL_OPTIONS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0"
+
+frontend:
+  replicas: 1
+  image:
+    repository: anon-news-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+postgres:
+  image:
+    repository: postgres
+    tag: "16-alpine"
+  service:
+    port: 5432
+  storage:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  auth:
+    username: anonnews
+    password: anonnews-secret-pw
+    database: anonnews
+
+ingress:
+  enabled: true
+  className: traefik
+  host: anon-news.local
+
+dash0:
+  enabled: true
+  authToken: ""  # Set via --set or values override
+
+apiKeys:
+  reddit:
+    clientId: ""
+    clientSecret: ""
+  github:
+    token: ""
+  youtube:
+    apiKey: ""
+  devto:
+    apiKey: ""
