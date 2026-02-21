@@ -173,7 +173,7 @@ resource "google_container_node_pool" "primary_nodes" {
   node_count = 1
 
   node_config {
-    machine_type = "e2-small" # 2 vCPU, 2GB RAM
+    machine_type = "e2-standard-2" # 2 vCPU dedicated, 8GB RAM
     spot         = true       # ~50% cheaper than on-demand
 
     disk_size_gb = 30
