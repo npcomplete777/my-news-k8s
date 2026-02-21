@@ -4,6 +4,7 @@ backend/build/
 backend/bin/
 *.class
 *.jar
+!backend/gradle/wrapper/gradle-wrapper.jar
 *.war
 
 # Node.js
