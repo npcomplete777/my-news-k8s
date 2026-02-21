@@ -5,7 +5,7 @@
 backend:
   replicas: 1
   image:
-    repository: us-central1-docker.pkg.dev/o11y-observatory/o11y-news/backend
+    repository: ghcr.io/npcomplete777/o11y-news-backend
     tag: latest
     pullPolicy: Always
   resources:
@@ -19,7 +19,7 @@ backend:
 frontend:
   replicas: 1
   image:
-    repository: us-central1-docker.pkg.dev/o11y-observatory/o11y-news/frontend
+    repository: ghcr.io/npcomplete777/o11y-news-frontend
     tag: latest
     pullPolicy: Always
   resources:
