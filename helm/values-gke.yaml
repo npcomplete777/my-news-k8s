@@ -15,12 +15,11 @@ backend:
     limits:
       cpu: 500m
       memory: 1536Mi
-
 frontend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-frontend
-    tag: latest
+    tag: 83a8840
     pullPolicy: Always
   resources:
     requests:
@@ -29,7 +28,6 @@ frontend:
     limits:
       cpu: 250m
       memory: 256Mi
-
 postgres:
   resources:
     requests:
@@ -41,7 +39,6 @@ postgres:
   storage:
     size: 5Gi
     storageClass: standard-rwo
-
 ingress:
   enabled: true
   className: nginx
@@ -53,15 +50,14 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
   tls:
     enabled: false
-
 dash0:
   enabled: true
-  authToken: ""   # injected via ArgoCD helm param (not in git)
+  authToken: "" # injected via ArgoCD helm param (not in git)
   dataset: "o11y-news"
   dashboards:
-    enabled: false  # PersesDashboard CRD not available via Dash0 Operator
+    enabled: false # PersesDashboard CRD not available via Dash0 Operator
   alerts:
-    enabled: false  # PrometheusRule CRD requires Prometheus Operator (not installed)
+    enabled: false # PrometheusRule CRD requires Prometheus Operator (not installed)
   syntheticChecks:
     enabled: true
     frontendUrl: "https://o11y-news.example.com"
