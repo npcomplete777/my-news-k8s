@@ -54,7 +54,7 @@ export interface ServiceMapDTO {
 
 export interface ServiceNode {
   id: string;
-  label: string;
+  displayName: string;
   type: string;   // "SERVICE" | "DATABASE" | "EXTERNAL"
 }
 

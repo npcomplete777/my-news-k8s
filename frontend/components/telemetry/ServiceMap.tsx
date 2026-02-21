@@ -93,7 +93,7 @@ function NodeCircle({
         fontSize={9} fontWeight={600} fill={c.text}
         style={{ fontFamily: 'monospace' }}
       >
-        {node.label.length > 10 ? node.label.slice(0, 9) + '…' : node.label}
+        {(node.displayName ?? node.id).length > 10 ? (node.displayName ?? node.id).slice(0, 9) + '…' : (node.displayName ?? node.id)}
       </text>
       <text
         x={p.x} y={p.y + NODE_R + 12}
