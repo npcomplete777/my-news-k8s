@@ -48,8 +48,10 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   tls:
-    enabled: false
+    enabled: true
 dash0:
   enabled: true
   authToken: "" # injected via ArgoCD helm param (not in git)

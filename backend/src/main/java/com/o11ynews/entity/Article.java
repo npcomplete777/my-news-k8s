@@ -65,6 +65,7 @@ public class Article {
     @Column(name = "dedup_hash", nullable = false, length = 64)
     private String dedupHash;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;
 

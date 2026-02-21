@@ -17,8 +17,10 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if and .Values.ingress.tls .Values.ingress.tls.enabled }}
   tls:
-    - hosts:
+    - {{- if .Values.ingress.host }}
+      hosts:
         - {{ .Values.ingress.host }}
+      {{- end }}
       secretName: {{ include "o11y-news.fullname" . }}-tls
   {{- end }}
   rules:
