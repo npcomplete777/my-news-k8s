@@ -14,7 +14,7 @@ backend:
       memory: 768Mi
     limits:
       cpu: 500m
-      memory: 1Gi
+      memory: 1536Mi
 
 frontend:
   replicas: 1
