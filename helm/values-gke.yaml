@@ -56,7 +56,8 @@ ingress:
 
 dash0:
   enabled: true
-  authToken: ""
+  authToken: ""   # injected via ArgoCD helm param (not in git)
+  dataset: "o11y-news"
   dashboards:
     enabled: false  # PersesDashboard CRD not available via Dash0 Operator
   alerts:

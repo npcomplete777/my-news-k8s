@@ -66,7 +66,8 @@ ingress:
 
 dash0:
   enabled: true
-  authToken: ""  # Set via --set or values override
+  authToken: ""   # Set via ArgoCD helm param or --set (never in git)
+  dataset: "default"
   dashboards:
     enabled: true
   alerts:
