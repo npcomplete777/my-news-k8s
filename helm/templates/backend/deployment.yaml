@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "anon-news.fullname" . }}-backend
+  name: {{ include "o11y-news.fullname" . }}-backend
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "anon-news.labels" . | nindent 4 }}
+    {{- include "o11y-news.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   replicas: {{ .Values.backend.replicas }}
   selector:
     matchLabels:
-      {{- include "anon-news.selectorLabels" . | nindent 6 }}
+      {{- include "o11y-news.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        {{- include "anon-news.selectorLabels" . | nindent 8 }}
+        {{- include "o11y-news.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: backend
     spec:
-      serviceAccountName: {{ include "anon-news.fullname" . }}-backend
+      serviceAccountName: {{ include "o11y-news.fullname" . }}-backend
       containers:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
@@ -35,20 +35,20 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: {{ .Values.backend.env.JAVA_TOOL_OPTIONS | quote }}
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://{{ include "anon-news.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.auth.database }}"
+              value: "jdbc:postgresql://{{ include "o11y-news.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.auth.database }}"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "anon-news.fullname" . }}-postgres
+                  name: {{ include "o11y-news.fullname" . }}-postgres
                   key: username
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "anon-news.fullname" . }}-postgres
+                  name: {{ include "o11y-news.fullname" . }}-postgres
                   key: password
           envFrom:
             - secretRef:
-                name: {{ include "anon-news.fullname" . }}-api-keys
+                name: {{ include "o11y-news.fullname" . }}-api-keys
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           startupProbe:

@@ -4,7 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "com.anonnews"
+group = "com.o11ynews"
 version = "0.1.0-SNAPSHOT"
 
 java {
@@ -40,6 +40,9 @@ dependencies {
 
     // OTel manual annotations (auto-instrumentation handled by Dash0 operator)
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.11.0")
+
+    // OTel API — for Baggage propagation in SessionCorrelationFilter
+    implementation("io.opentelemetry:opentelemetry-api:1.45.0")
 
     // Micrometer -> OTel bridge (metrics)
     implementation("io.micrometer:micrometer-registry-otlp")

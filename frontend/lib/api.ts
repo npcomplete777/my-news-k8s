@@ -21,7 +21,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 function getApiKey(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('anon-news-api-key') || 'dev-api-key-001';
+    return localStorage.getItem('o11y-news-api-key') || 'dev-api-key-001';
   }
   return 'dev-api-key-001';
 }

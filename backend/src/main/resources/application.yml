@@ -1,15 +1,15 @@
 spring:
   application:
-    name: anon-news-backend
+    name: o11y-news-backend
 
   threads:
     virtual:
       enabled: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/anonnews
-    username: anonnews
-    password: anonnews
+    url: jdbc:postgresql://localhost:5432/o11ynews
+    username: o11ynews
+    password: o11ynews
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -77,7 +77,7 @@ poller:
         - homelab
         - cloudnative
       limit: 25
-      user-agent: "anon-news-bot/0.1 (by /u/anon-news-aggregator)"
+      user-agent: "o11y-news-bot/0.1 (by /u/o11y-news-aggregator)"
     hackernews:
       enabled: true
       cron: "0 */3 * * * *"
@@ -156,6 +156,7 @@ auth:
       - /api/v1/articles
       - /api/v1/articles/**
       - /api/v1/sources
+      - /api/telemetry/**
 
 # ---------- Resilience4j ----------
 resilience4j:
@@ -270,3 +271,23 @@ resilience4j:
         limit-for-period: 20
         limit-refresh-period: 60s
         timeout-duration: 5s
+
+# ---------- Dash0 Telemetry API ----------
+dash0:
+  api:
+    base-url: ${DASH0_API_URL:https://api.eu-west-1.aws.dash0.com}
+    auth-token: ${DASH0_API_TOKEN:}
+    dataset: ${DASH0_DATASET:default}
+  telemetry:
+    max-traces: 50
+    max-logs: 100
+    refresh-interval-seconds: 3
+    pii-redaction:
+      enabled: true
+      strip-attributes:
+        - net.peer.ip
+        - http.client_ip
+        - http.user_agent
+        - http.request.header.cookie
+        - http.request.header.authorization
+        - user.id

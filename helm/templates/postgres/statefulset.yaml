@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "anon-news.fullname" . }}-postgres
+  name: {{ include "o11y-news.fullname" . }}-postgres
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "anon-news.labels" . | nindent 4 }}
+    {{- include "o11y-news.labels" . | nindent 4 }}
     app.kubernetes.io/component: postgres
 spec:
-  serviceName: {{ include "anon-news.fullname" . }}-postgres-headless
+  serviceName: {{ include "o11y-news.fullname" . }}-postgres-headless
   replicas: 1
   selector:
     matchLabels:
-      {{- include "anon-news.selectorLabels" . | nindent 6 }}
+      {{- include "o11y-news.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: postgres
   template:
     metadata:
       labels:
-        {{- include "anon-news.selectorLabels" . | nindent 8 }}
+        {{- include "o11y-news.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: postgres
     spec:
       containers:
@@ -32,12 +32,12 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "anon-news.fullname" . }}-postgres
+                  name: {{ include "o11y-news.fullname" . }}-postgres
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "anon-news.fullname" . }}-postgres
+                  name: {{ include "o11y-news.fullname" . }}-postgres
                   key: password
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata

@@ -2,16 +2,16 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "anon-news.fullname" . }}-backend
+  name: {{ include "o11y-news.fullname" . }}-backend
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "anon-news.labels" . | nindent 4 }}
+    {{- include "o11y-news.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "anon-news.fullname" . }}-backend
+    name: {{ include "o11y-news.fullname" . }}-backend
   minReplicas: 1
   maxReplicas: {{ .Values.backend.replicas }}
   metrics:

@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "anon-news.name" -}}
+{{- define "o11y-news.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "anon-news.fullname" -}}
+{{- define "o11y-news.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "anon-news.chart" -}}
+{{- define "o11y-news.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "anon-news.labels" -}}
-helm.sh/chart: {{ include "anon-news.chart" . }}
-{{ include "anon-news.selectorLabels" . }}
+{{- define "o11y-news.labels" -}}
+helm.sh/chart: {{ include "o11y-news.chart" . }}
+{{ include "o11y-news.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,7 +45,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "anon-news.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "anon-news.name" . }}
+{{- define "o11y-news.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "o11y-news.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

@@ -1,7 +1,7 @@
 backend:
   replicas: 1
   image:
-    repository: anon-news-backend
+    repository: o11y-news-backend
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -22,7 +22,7 @@ backend:
 frontend:
   replicas: 1
   image:
-    repository: anon-news-frontend
+    repository: o11y-news-frontend
     tag: latest
     pullPolicy: IfNotPresent
   service:
@@ -52,14 +52,14 @@ postgres:
       cpu: "2"
       memory: 1Gi
   auth:
-    username: anonnews
-    password: anonnews-secret-pw
-    database: anonnews
+    username: o11ynews
+    password: o11ynews-secret-pw
+    database: o11ynews
 
 ingress:
   enabled: true
   className: traefik
-  host: anon-news.local
+  host: o11y-news.local
   annotations: {}
   tls:
     enabled: false
@@ -73,9 +73,9 @@ dash0:
     enabled: true
   syntheticChecks:
     enabled: true
-    frontendUrl: "https://anon-news.local"
-    backendHealthUrl: "https://anon-news.local/api/health"
-    telemetryApiUrl: "https://anon-news.local/api/telemetry/metrics"
+    frontendUrl: "https://o11y-news.local"
+    backendHealthUrl: "https://o11y-news.local/api/health"
+    telemetryApiUrl: "https://o11y-news.local/api/telemetry/metrics"
     locations:
       - "eu-west-1"
   views:

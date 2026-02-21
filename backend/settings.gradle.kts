@@ -1,1 +1,1 @@
-rootProject.name = "anon-news-backend"
+rootProject.name = "o11y-news-backend"

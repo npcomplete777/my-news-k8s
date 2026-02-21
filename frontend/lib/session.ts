@@ -1,4 +1,4 @@
-const SESSION_KEY = 'anon-news-session-id';
+const SESSION_KEY = 'o11y-news-session-id';
 
 function newId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {

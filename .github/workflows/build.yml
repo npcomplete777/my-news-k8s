@@ -11,8 +11,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/anon-news-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/anon-news-frontend
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/o11y-news-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/o11y-news-frontend
 
 permissions:
   contents: read

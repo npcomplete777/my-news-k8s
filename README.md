@@ -1,4 +1,4 @@
-# Anonymous News Browsing
+# Observing O11y News
 
 A cloud-native news aggregation platform that polls multiple developer/DevOps news sources and presents them through a unified frontend. Built with Spring Boot 3, Next.js 15, PostgreSQL, and deployed on Kubernetes via Helm.
 
@@ -49,9 +49,9 @@ A cloud-native news aggregation platform that polls multiple developer/DevOps ne
 ## Project Structure
 
 ```
-anon-news-browsing/
+o11y-news-browsing/
 ├── backend/
-│   └── src/main/java/com/anonnews/
+│   └── src/main/java/com/o11ynews/
 │       ├── config/          # Security, WebClient, Scheduling, Resilience
 │       ├── controller/      # REST controllers (6)
 │       ├── dto/             # Request/response records (6)
@@ -96,44 +96,44 @@ anon-news-browsing/
 ### 1. Create the k3d cluster
 
 ```bash
-k3d cluster create anon-news --agents 1 --wait
+k3d cluster create o11y-news --agents 1 --wait
 ```
 
 ### 2. Build Docker images
 
 ```bash
 # Backend
-docker build -t anon-news-backend:latest -f docker/backend.Dockerfile ./backend
+docker build -t o11y-news-backend:latest -f docker/backend.Dockerfile ./backend
 
 # Frontend
-docker build -t anon-news-frontend:latest -f docker/frontend.Dockerfile ./frontend
+docker build -t o11y-news-frontend:latest -f docker/frontend.Dockerfile ./frontend
 ```
 
 ### 3. Import images into k3d
 
 ```bash
-k3d image import anon-news-backend:latest anon-news-frontend:latest -c anon-news
+k3d image import o11y-news-backend:latest o11y-news-frontend:latest -c o11y-news
 ```
 
 ### 4. Deploy with Helm
 
 ```bash
-helm upgrade --install anon-news ./helm --set dash0.enabled=false
+helm upgrade --install o11y-news ./helm --set dash0.enabled=false
 ```
 
 ### 5. Access the application
 
 ```bash
 # Port-forward frontend and backend
-kubectl port-forward svc/anon-news-frontend 3000:3000 &
-kubectl port-forward svc/anon-news-backend 8080:8080 &
+kubectl port-forward svc/o11y-news-frontend 3000:3000 &
+kubectl port-forward svc/o11y-news-backend 8080:8080 &
 ```
 
 - **Frontend UI**: http://localhost:3000
 - **Backend API**: http://localhost:8080
 - **Health check**: http://localhost:8080/api/health
 
-Alternatively, add `anon-news.local` to `/etc/hosts` pointing to `127.0.0.1` to use the Traefik ingress.
+Alternatively, add `o11y-news.local` to `/etc/hosts` pointing to `127.0.0.1` to use the Traefik ingress.
 
 ## API Endpoints
 
@@ -177,7 +177,7 @@ Alternatively, add `anon-news.local` to `/etc/hosts` pointing to `127.0.0.1` to 
 Set via Helm values or `--set`:
 
 ```bash
-helm upgrade --install anon-news ./helm \
+helm upgrade --install o11y-news ./helm \
   --set apiKeys.reddit.clientId=YOUR_ID \
   --set apiKeys.reddit.clientSecret=YOUR_SECRET \
   --set apiKeys.github.token=YOUR_TOKEN \
@@ -227,10 +227,10 @@ Set `NEXT_PUBLIC_API_URL=http://localhost:8080` for the backend connection.
 
 ```bash
 # Remove Helm release
-helm uninstall anon-news
+helm uninstall o11y-news
 
 # Delete the k3d cluster
-k3d cluster delete anon-news
+k3d cluster delete o11y-news
 ```
 
 ## Tech Stack

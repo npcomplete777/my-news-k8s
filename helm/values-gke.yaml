@@ -1,11 +1,11 @@
 # GKE Standard overrides for The Self-Observing Observatory
-# Usage: helm upgrade --install anon-news ./helm -f helm/values-gke.yaml -n anon-news
+# Usage: helm upgrade --install o11y-news ./helm -f helm/values-gke.yaml -n o11y-news
 # Cost target: <$20/month on single e2-small (2 vCPU, 2GB RAM)
 
 backend:
   replicas: 1
   image:
-    repository: us-central1-docker.pkg.dev/o11y-observatory/anon-news/backend
+    repository: us-central1-docker.pkg.dev/o11y-observatory/o11y-news/backend
     tag: latest
     pullPolicy: Always
   resources:
@@ -19,7 +19,7 @@ backend:
 frontend:
   replicas: 1
   image:
-    repository: us-central1-docker.pkg.dev/o11y-observatory/anon-news/frontend
+    repository: us-central1-docker.pkg.dev/o11y-observatory/o11y-news/frontend
     tag: latest
     pullPolicy: Always
   resources:
@@ -63,9 +63,9 @@ dash0:
     enabled: false  # PrometheusRule CRD requires Prometheus Operator (not installed)
   syntheticChecks:
     enabled: true
-    frontendUrl: "https://anon-news.example.com"
-    backendHealthUrl: "https://anon-news.example.com/api/health"
-    telemetryApiUrl: "https://anon-news.example.com/api/telemetry/metrics"
+    frontendUrl: "https://o11y-news.example.com"
+    backendHealthUrl: "https://o11y-news.example.com/api/health"
+    telemetryApiUrl: "https://o11y-news.example.com/api/telemetry/metrics"
     locations:
       - "eu-west-1"
       - "us-east-1"

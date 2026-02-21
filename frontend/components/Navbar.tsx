@@ -21,10 +21,10 @@ export function Navbar() {
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-amber-600 text-xs font-bold text-white">
-            AN
+            O11
           </div>
           <span className="hidden text-lg font-bold text-zinc-100 sm:inline">
-            Anon News
+            Observing O11y News
           </span>
         </Link>
 

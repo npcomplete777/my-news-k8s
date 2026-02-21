@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres-service.anon-news.svc.cluster.local:5432/anonnews
-    username: ${DB_USERNAME:anonnews}
-    password: ${DB_PASSWORD:anonnews}
+    url: jdbc:postgresql://postgres-service.o11y-news.svc.cluster.local:5432/o11ynews
+    username: ${DB_USERNAME:o11ynews}
+    password: ${DB_PASSWORD:o11ynews}
     hikari:
       maximum-pool-size: 15
       minimum-idle: 3
@@ -37,3 +37,10 @@ poller:
 auth:
   api-key:
     enabled: true
+
+# Dash0 API credentials from Kubernetes Secret (o11y-news-api-keys)
+dash0:
+  api:
+    base-url: ${DASH0_API_URL:https://api.eu-west-1.aws.dash0.com}
+    auth-token: ${DASH0_API_TOKEN:}
+    dataset: ${DASH0_DATASET:default}

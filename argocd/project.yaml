@@ -8,7 +8,7 @@ spec:
   sourceRepos:
     - https://github.com/npcomplete777/my-news-k8s.git
   destinations:
-    - namespace: anon-news
+    - namespace: o11y-news
       server: https://kubernetes.default.svc
     - namespace: dash0-system
       server: https://kubernetes.default.svc

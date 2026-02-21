@@ -3,8 +3,8 @@ import './globals.css';
 import { Navbar } from '@/components/Navbar';
 
 export const metadata: Metadata = {
-  title: 'Anon News',
-  description: 'Cloud-native news aggregator — Kubernetes, CNCF, and dev ecosystem',
+  title: 'Observing O11y News',
+  description: 'Observing O11y News — Cloud-native news aggregator with live observability',
 };
 
 export default function RootLayout({

@@ -9,7 +9,7 @@ export function PrivacyNotice() {
     <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm">
       <div className="flex items-center justify-between gap-4">
         <p className="text-amber-300 font-medium">
-          🔒 Anonymized live telemetry — no personal data
+          🔒 Redacted live telemetry — no personal data
         </p>
         <button
           onClick={() => setExpanded(v => !v)}

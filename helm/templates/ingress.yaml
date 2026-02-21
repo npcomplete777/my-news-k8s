@@ -2,10 +2,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "anon-news.fullname" . }}
+  name: {{ include "o11y-news.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "anon-news.labels" . | nindent 4 }}
+    {{- include "o11y-news.labels" . | nindent 4 }}
   annotations:
     {{- if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
@@ -19,7 +19,7 @@ spec:
   tls:
     - hosts:
         - {{ .Values.ingress.host }}
-      secretName: {{ include "anon-news.fullname" . }}-tls
+      secretName: {{ include "o11y-news.fullname" . }}-tls
   {{- end }}
   rules:
     - {{- if .Values.ingress.host }}
@@ -31,14 +31,14 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "anon-news.fullname" . }}-backend
+                name: {{ include "o11y-news.fullname" . }}-backend
                 port:
                   number: {{ .Values.backend.service.port }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "anon-news.fullname" . }}-frontend
+                name: {{ include "o11y-news.fullname" . }}-frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
 {{- end }}

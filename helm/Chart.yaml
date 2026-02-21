@@ -1,6 +1,6 @@
 apiVersion: v2
-name: anon-news
-description: Anonymous News Browsing - Cloud-native news aggregator
+name: o11y-news
+description: Observing O11y News - Cloud-native news aggregator
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
