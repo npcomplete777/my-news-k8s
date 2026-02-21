@@ -14,5 +14,6 @@ public record ArticleDTO(
     int score,
     List<String> tags,
     boolean read,
-    boolean bookmarked
+    boolean bookmarked,
+    String thumbnailUrl
 ) {}

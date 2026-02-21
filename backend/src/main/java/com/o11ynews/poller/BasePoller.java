@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Abstract base class for all feed pollers. Handles the common workflow of
@@ -137,6 +139,34 @@ public abstract class BasePoller {
             log.error("Poll failed for {}: {}", slug, e.getMessage(), e);
             deadLetterService.recordFailure(source, e.getMessage(), null);
         }
+    }
+
+    private static final Pattern IMG_SRC_PATTERN =
+            Pattern.compile("<img[^>]+src=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Extracts the first image URL from an HTML string (decoded or raw).
+     * Handles both plain HTML and HTML-entity-encoded content (e.g. RSS descriptions).
+     * Returns null if no image is found.
+     */
+    protected static String extractFirstImageUrl(String html) {
+        if (html == null || html.isBlank()) return null;
+        // Decode common HTML entities so the regex can match entity-encoded HTML
+        String decoded = html
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&amp;", "&");
+        Matcher m = IMG_SRC_PATTERN.matcher(decoded);
+        if (m.find()) {
+            String src = m.group(1);
+            // Skip tracking pixels and tiny icons
+            if (src.length() > 20 && !src.contains("pixel") && !src.contains("tracking")) {
+                return src;
+            }
+        }
+        return null;
     }
 
     /**

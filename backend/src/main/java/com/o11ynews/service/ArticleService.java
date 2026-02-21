@@ -135,7 +135,8 @@ public class ArticleService {
                 article.getScore(),
                 article.getTags(),
                 isRead,
-                isBookmarked
+                isBookmarked,
+                extractThumbnailUrl(article.getMetadataJson())
         );
     }
 
@@ -155,7 +156,8 @@ public class ArticleService {
                 article.getScore(),
                 article.getTags(),
                 isRead,
-                isBookmarked
+                isBookmarked,
+                extractThumbnailUrl(article.getMetadataJson())
         );
     }
 
@@ -187,5 +189,10 @@ public class ArticleService {
             log.warn("Failed to parse article metadata JSON: {}", e.getMessage());
             return Collections.emptyMap();
         }
+    }
+
+    private String extractThumbnailUrl(String metadataJson) {
+        Object value = parseMetadataJson(metadataJson).get("thumbnailUrl");
+        return value instanceof String s && !s.isBlank() ? s : null;
     }
 }

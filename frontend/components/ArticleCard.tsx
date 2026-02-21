@@ -8,13 +8,21 @@ import type { Article } from '@/lib/types';
 
 const SOURCE_STYLES: Record<string, string> = {
   'hacker-news': 'bg-hn/15 text-hn',
+  hackernews: 'bg-hn/15 text-hn',
   reddit: 'bg-reddit/15 text-reddit',
   github: 'bg-zinc-700/50 text-zinc-300',
+  'github-releases': 'bg-zinc-700/50 text-zinc-300',
   devto: 'bg-zinc-700/50 text-zinc-300',
   lobsters: 'bg-lobsters/15 text-lobsters',
   youtube: 'bg-youtube/15 text-youtube',
   'k8s-blog': 'bg-k8s/15 text-k8s',
+  kubernetesblog: 'bg-k8s/15 text-k8s',
   'cncf-blog': 'bg-cncf/15 text-cncf',
+  cncfblog: 'bg-cncf/15 text-cncf',
+  datadogblog: 'bg-purple-900/30 text-purple-300',
+  dynatraceblog: 'bg-teal-900/30 text-teal-300',
+  grafanablog: 'bg-orange-900/30 text-orange-300',
+  newrelicblog: 'bg-green-900/30 text-green-300',
 };
 
 export function sourceColor(source: string): string {
@@ -41,6 +49,24 @@ export function ArticleCard({ article, onBookmarkToggle }: ArticleCardProps) {
       )}
     >
       <div className="flex items-start gap-3">
+        {/* Thumbnail */}
+        {article.thumbnailUrl && (
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden shrink-0 sm:block"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={article.thumbnailUrl}
+              alt=""
+              className="h-16 w-24 rounded object-cover opacity-80 transition-opacity group-hover:opacity-100"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+          </a>
+        )}
+
         {/* Score */}
         {article.score > 0 && (
           <div className="flex shrink-0 flex-col items-center pt-0.5">

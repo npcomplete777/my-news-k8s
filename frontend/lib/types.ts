@@ -10,6 +10,7 @@ export interface Article {
   tags: string[];
   read: boolean;
   bookmarked: boolean;
+  thumbnailUrl: string | null;
 }
 
 export interface ArticleDetail extends Article {

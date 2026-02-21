@@ -32,7 +32,11 @@ public class ApiKeyAuthFilter implements Filter {
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/health",
             "/actuator/**",
-            "/api/telemetry/**"
+            "/api/telemetry/**",
+            "/api/articles",
+            "/api/articles/**",
+            "/api/feeds",
+            "/api/sources"
     );
 
     private final ApiKeyRepository apiKeyRepository;

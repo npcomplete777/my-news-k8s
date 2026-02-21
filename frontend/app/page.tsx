@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { ArticleFeed } from '@/components/ArticleFeed';
 import { SourceFilter } from '@/components/SourceFilter';
 import { TopicFilter } from '@/components/TopicFilter';
+import { FeaturedArticle } from '@/components/FeaturedArticle';
+import { LiveTelemetryPulse } from '@/components/LiveTelemetryPulse';
 
 function FilterSkeleton() {
   return (
@@ -41,9 +43,15 @@ export default function HomePage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold text-zinc-100">Latest News</h1>
         <p className="text-sm text-zinc-500">
-          Cloud-native, Kubernetes, and developer ecosystem news from across the web
+          Cloud-native, Kubernetes, and observability news from across the web
         </p>
       </div>
+
+      {/* Live telemetry strip */}
+      <LiveTelemetryPulse />
+
+      {/* Featured blog post */}
+      <FeaturedArticle />
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sidebar filters */}
