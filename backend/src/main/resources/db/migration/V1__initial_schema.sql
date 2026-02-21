@@ -145,7 +145,7 @@ INSERT INTO users (username, preferences) VALUES
     ('dev', '{}');
 
 -- ---------- Seed: Default API key for development ----------
--- Plaintext key: anon-news-dev-key-2024
+-- Plaintext key: o11y-news-dev-key-2024
 -- SHA-256 hash: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
 INSERT INTO api_keys (user_id, key_hash, name, active) VALUES
     (1, 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', 'dev-default', true);
