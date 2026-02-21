@@ -8,5 +8,8 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}
     app.kubernetes.io/component: view
 spec:
+  display:
+    name: "Error Traces"
+    description: "View of traces with error status for troubleshooting"
   type: resources
 {{- end }}

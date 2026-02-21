@@ -8,5 +8,8 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}
     app.kubernetes.io/component: view
 spec:
+  display:
+    name: "Slow Requests"
+    description: "View of requests with high latency for performance analysis"
   type: resources
 {{- end }}

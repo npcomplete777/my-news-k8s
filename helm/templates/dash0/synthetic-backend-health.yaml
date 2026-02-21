@@ -8,22 +8,41 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}
     app.kubernetes.io/component: synthetic-check
 spec:
+  display:
+    name: "Backend Health Check"
   enabled: true
+  notifications:
+    channels: []
   plugin:
     kind: http
     spec:
+      assertions:
+        criticalAssertions:
+          - kind: status_code
+            spec:
+              operator: lt
+              value: "400"
+        degradedAssertions: []
       request:
         method: get
         url: {{ .Values.dash0.syntheticChecks.backendHealthUrl | quote }}
         redirects: follow
         headers:
-          Accept: application/json
+          - name: Accept
+            value: application/json
+        queryParameters: []
+        tls:
+          allowInsecure: false
+        tracing:
+          addTracingHeaders: true
+  retries:
+    kind: fixed
+    spec:
+      attempts: 2
+      delay: 5s
   schedule:
     interval: 1m
     locations:
       {{- toYaml .Values.dash0.syntheticChecks.locations | nindent 6 }}
     strategy: all_locations
-  retries:
-    count: 2
-    delay: 5s
 {{- end }}
