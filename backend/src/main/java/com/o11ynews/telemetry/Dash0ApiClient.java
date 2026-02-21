@@ -73,7 +73,8 @@ public class Dash0ApiClient {
         try {
             Instant now  = Instant.now();
             Instant from = now.minusSeconds((long) timeRangeMinutes * 60);
-            OtlpRequest req = new OtlpRequest(Map.of(), new TimeRange(from.toString(), now.toString()), limit);
+            OtlpRequest req = new OtlpRequest(properties.getApi().getDataset(),
+                    Map.of(), new TimeRange(from.toString(), now.toString()), limit);
 
             OtlpSpansResponse response = client.post()
                     .uri(SPANS_PATH)
@@ -120,7 +121,8 @@ public class Dash0ApiClient {
         try {
             Instant now  = Instant.now();
             Instant from = now.minusSeconds((long) timeRangeMinutes * 60);
-            OtlpRequest req = new OtlpRequest(Map.of(), new TimeRange(from.toString(), now.toString()), limit);
+            OtlpRequest req = new OtlpRequest(properties.getApi().getDataset(),
+                    Map.of(), new TimeRange(from.toString(), now.toString()), limit);
 
             OtlpLogsResponse response = client.post()
                     .uri(LOGS_PATH)
@@ -159,13 +161,16 @@ public class Dash0ApiClient {
         if (properties.getApi().getAuthToken().isBlank()) return Optional.empty();
         try {
             long now = Instant.now().getEpochSecond();
-            // Use named template vars {q}/{t} so build() properly URL-encodes the values,
+            String dataset = properties.getApi().getDataset();
+            // Use named template vars so build() properly URL-encodes values,
             // preventing PromQL label selectors like {job="x"} from being misread as URI vars.
+            // Dataset is a query param for GET requests (per Dash0 API convention).
             PrometheusResponse resp = client.get()
                     .uri(b -> b.path(METRICS_PATH)
                                .queryParam("query", "{q}")
                                .queryParam("time", "{t}")
-                               .build(promQuery, now))
+                               .queryParam("dataset", "{d}")
+                               .build(promQuery, now, dataset))
                     .retrieve()
                     .body(PrometheusResponse.class);
             return extractFirstScalar(resp);
@@ -180,11 +185,13 @@ public class Dash0ApiClient {
         if (properties.getApi().getAuthToken().isBlank()) return Collections.emptyList();
         try {
             long now = Instant.now().getEpochSecond();
+            String dataset = properties.getApi().getDataset();
             PrometheusResponse resp = client.get()
                     .uri(b -> b.path(METRICS_PATH)
                                .queryParam("query", "{q}")
                                .queryParam("time", "{t}")
-                               .build(promQuery, now))
+                               .queryParam("dataset", "{d}")
+                               .build(promQuery, now, dataset))
                     .retrieve()
                     .body(PrometheusResponse.class);
             if (resp == null || resp.data() == null || resp.data().result() == null) return Collections.emptyList();
@@ -322,6 +329,7 @@ public class Dash0ApiClient {
     // =========================================================================
 
     record OtlpRequest(
+            @JsonProperty("dataset")   String dataset,
             @JsonProperty("filters")   Map<String, Object> filters,
             @JsonProperty("timeRange") TimeRange timeRange,
             @JsonProperty("limit")     int limit
