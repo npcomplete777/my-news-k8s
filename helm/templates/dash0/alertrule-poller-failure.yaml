@@ -1,0 +1,40 @@
+{{- if and .Values.dash0.enabled .Values.dash0.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-poller-failure
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: alerting
+spec:
+  groups:
+    - name: {{ .Release.Name }}.poller
+      interval: 1m
+      rules:
+        - alert: PollerCircuitBreakerOpen
+          expr: >
+            resilience4j_circuitbreaker_state{namespace="{{ .Release.Namespace }}", state="open"} == 1
+          for: 1m
+          labels:
+            severity: warning
+            team: platform
+            app: {{ .Release.Name }}
+          annotations:
+            summary: "Poller circuit breaker open on {{ .Release.Name }}"
+            description: "Circuit breaker {{`{{ $labels.name }}`}} is in OPEN state. News source polling is degraded."
+        - alert: PollerHighFailureRate
+          expr: >
+            sum(rate(spring_scheduling_execution_seconds_count{namespace="{{ .Release.Namespace }}", exception!="none"}[10m]))
+            /
+            sum(rate(spring_scheduling_execution_seconds_count{namespace="{{ .Release.Namespace }}"}[10m]))
+            > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            app: {{ .Release.Name }}
+          annotations:
+            summary: "Poller failure rate > 50% on {{ .Release.Name }}"
+            description: "More than 50% of scheduled poller executions are failing over the last 10 minutes."
+{{- end }}

@@ -60,10 +60,26 @@ ingress:
   enabled: true
   className: traefik
   host: anon-news.local
+  annotations: {}
+  tls:
+    enabled: false
 
 dash0:
   enabled: true
   authToken: ""  # Set via --set or values override
+  dashboards:
+    enabled: true
+  alerts:
+    enabled: true
+  syntheticChecks:
+    enabled: true
+    frontendUrl: "https://anon-news.local"
+    backendHealthUrl: "https://anon-news.local/api/health"
+    telemetryApiUrl: "https://anon-news.local/api/telemetry/metrics"
+    locations:
+      - "eu-west-1"
+  views:
+    enabled: true
 
 apiKeys:
   reddit:

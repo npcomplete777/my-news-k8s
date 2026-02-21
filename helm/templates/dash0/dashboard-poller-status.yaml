@@ -1,0 +1,124 @@
+{{- if and .Values.dash0.enabled .Values.dash0.dashboards.enabled }}
+apiVersion: dashboard.dash0.com/v1
+kind: PersesDashboard
+metadata:
+  name: {{ .Release.Name }}-poller-status
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: dashboard
+spec:
+  display:
+    name: "News Poller Status"
+  duration: "1h"
+  variables: []
+  panels:
+    poller-execution-rate:
+      kind: Panel
+      spec:
+        display:
+          name: "Poller Execution Rate"
+          description: "Scheduled task executions per minute"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(rate(spring_scheduling_execution_seconds_count{namespace="{{ .Release.Namespace }}"}[5m])) by (exception)'
+                  seriesNameFormat: 'exception={{`{{exception}}`}}'
+    poller-duration:
+      kind: Panel
+      spec:
+        display:
+          name: "Poller Execution Duration"
+          description: "Average duration of scheduled pollers"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'rate(spring_scheduling_execution_seconds_sum{namespace="{{ .Release.Namespace }}"}[5m]) / rate(spring_scheduling_execution_seconds_count{namespace="{{ .Release.Namespace }}"}[5m])'
+                  seriesNameFormat: "avg duration (s)"
+    circuit-breaker-state:
+      kind: Panel
+      spec:
+        display:
+          name: "Circuit Breaker State"
+          description: "Resilience4j circuit breaker states (0=closed, 1=open, 2=half-open)"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'resilience4j_circuitbreaker_state{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: '{{`{{name}}`}}'
+    dead-letter-count:
+      kind: Panel
+      spec:
+        display:
+          name: "Dead Letter Queue"
+          description: "Failed poll attempts awaiting retry"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(dead_letters_total{namespace="{{ .Release.Namespace }}"}) by (source)'
+                  seriesNameFormat: '{{`{{source}}`}}'
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: "Poller Health"
+          collapse:
+            open: true
+        items:
+          - x: 0
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/poller-execution-rate"
+          - x: 12
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/poller-duration"
+          - x: 0
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/circuit-breaker-state"
+          - x: 12
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/dead-letter-count"
+{{- end }}

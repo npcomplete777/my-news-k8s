@@ -1,0 +1,28 @@
+{{- if and .Values.dash0.enabled .Values.dash0.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-high-latency
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: alerting
+spec:
+  groups:
+    - name: {{ .Release.Name }}.latency
+      interval: 1m
+      rules:
+        - alert: HighP95Latency
+          expr: >
+            histogram_quantile(0.95,
+              sum(rate(http_server_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le)
+            ) > 2
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            app: {{ .Release.Name }}
+          annotations:
+            summary: "High p95 latency on {{ .Release.Name }}"
+            description: "p95 request latency exceeds 2 seconds for the last 5 minutes. Current value: {{`{{ $value | printf \"%.2f\" }}`}}s"
+{{- end }}

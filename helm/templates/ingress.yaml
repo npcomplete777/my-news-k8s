@@ -7,11 +7,24 @@ metadata:
   labels:
     {{- include "anon-news.labels" . | nindent 4 }}
   annotations:
+    {{- if eq .Values.ingress.className "traefik" }}
     traefik.ingress.kubernetes.io/router.entrypoints: web
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
+  {{- if and .Values.ingress.tls .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ include "anon-news.fullname" . }}-tls
+  {{- end }}
   rules:
-    - host: {{ .Values.ingress.host }}
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
       http:
         paths:
           - path: /api

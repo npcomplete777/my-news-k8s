@@ -1,3 +1,4 @@
+{{- if gt (int .Values.backend.replicas) 1 -}}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -12,7 +13,7 @@ spec:
     kind: Deployment
     name: {{ include "anon-news.fullname" . }}-backend
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: {{ .Values.backend.replicas }}
   metrics:
     - type: Resource
       resource:
@@ -20,9 +21,4 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
+{{- end }}

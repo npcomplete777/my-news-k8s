@@ -1,0 +1,12 @@
+{{- if and .Values.dash0.enabled .Values.dash0.views.enabled }}
+apiVersion: views.dash0.com/v1
+kind: Dash0View
+metadata:
+  name: {{ .Release.Name }}-slow-requests
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: view
+spec:
+  type: resources
+{{- end }}

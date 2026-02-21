@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: anon-news
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/npcomplete777/my-news-k8s.git
+    targetRevision: main
+    path: helm
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-gke.yaml
+      parameters: []
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: anon-news
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

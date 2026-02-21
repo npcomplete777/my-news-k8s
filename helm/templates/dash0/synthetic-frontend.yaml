@@ -1,0 +1,27 @@
+{{- if and .Values.dash0.enabled .Values.dash0.syntheticChecks.enabled }}
+apiVersion: checks.dash0.com/v1
+kind: Dash0SyntheticCheck
+metadata:
+  name: {{ .Release.Name }}-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: synthetic-check
+spec:
+  enabled: true
+  plugin:
+    kind: http
+    spec:
+      request:
+        method: get
+        url: {{ .Values.dash0.syntheticChecks.frontendUrl | quote }}
+        redirects: follow
+  schedule:
+    interval: 5m
+    locations:
+      {{- toYaml .Values.dash0.syntheticChecks.locations | nindent 6 }}
+    strategy: all_locations
+  retries:
+    count: 2
+    delay: 5s
+{{- end }}

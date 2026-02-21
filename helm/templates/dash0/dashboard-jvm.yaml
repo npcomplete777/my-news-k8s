@@ -1,0 +1,148 @@
+{{- if and .Values.dash0.enabled .Values.dash0.dashboards.enabled }}
+apiVersion: dashboard.dash0.com/v1
+kind: PersesDashboard
+metadata:
+  name: {{ .Release.Name }}-jvm-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: dashboard
+spec:
+  display:
+    name: "JVM Metrics"
+  duration: "1h"
+  variables: []
+  panels:
+    heap-memory:
+      kind: Panel
+      spec:
+        display:
+          name: "Heap Memory Usage"
+          description: "JVM heap memory used vs committed"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+            yAxis:
+              format:
+                unit: bytes
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(jvm_memory_used_bytes{namespace="{{ .Release.Namespace }}", area="heap"}) by (id)'
+                  seriesNameFormat: 'used {{`{{id}}`}}'
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(jvm_memory_committed_bytes{namespace="{{ .Release.Namespace }}", area="heap"})'
+                  seriesNameFormat: "committed"
+    gc-pauses:
+      kind: Panel
+      spec:
+        display:
+          name: "GC Pause Duration"
+          description: "Garbage collection pause time"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'rate(jvm_gc_pause_seconds_sum{namespace="{{ .Release.Namespace }}"}[5m])'
+                  seriesNameFormat: '{{`{{action}}`}} {{`{{cause}}`}}'
+    live-threads:
+      kind: Panel
+      spec:
+        display:
+          name: "Live Threads"
+          description: "JVM thread counts"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'jvm_threads_live_threads{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "live"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'jvm_threads_daemon_threads{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "daemon"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'jvm_threads_peak_threads{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "peak"
+    classes-loaded:
+      kind: Panel
+      spec:
+        display:
+          name: "Classes Loaded"
+          description: "JVM class loading metrics"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'jvm_classes_loaded_classes{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "loaded"
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: "JVM"
+          collapse:
+            open: true
+        items:
+          - x: 0
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/heap-memory"
+          - x: 12
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/gc-pauses"
+          - x: 0
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/live-threads"
+          - x: 12
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/classes-loaded"
+{{- end }}

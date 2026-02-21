@@ -1,0 +1,37 @@
+{{- if and .Values.dash0.enabled .Values.dash0.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-pod-restarts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: alerting
+spec:
+  groups:
+    - name: {{ .Release.Name }}.pod-health
+      interval: 1m
+      rules:
+        - alert: PodRestartLoop
+          expr: >
+            increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+            app: {{ .Release.Name }}
+          annotations:
+            summary: "Pod restart loop in {{ .Release.Namespace }}"
+            description: "Pod {{`{{ $labels.pod }}`}} container {{`{{ $labels.container }}`}} has restarted {{`{{ $value | printf \"%.0f\" }}`}} times in the last 15 minutes."
+        - alert: PodNotReady
+          expr: >
+            kube_pod_status_ready{namespace="{{ .Release.Namespace }}", condition="true"} == 0
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+            app: {{ .Release.Name }}
+          annotations:
+            summary: "Pod not ready in {{ .Release.Namespace }}"
+            description: "Pod {{`{{ $labels.pod }}`}} has not been ready for 5 minutes."
+{{- end }}

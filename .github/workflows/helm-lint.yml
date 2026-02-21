@@ -1,0 +1,44 @@
+name: Helm Lint
+
+on:
+  pull_request:
+    paths:
+      - 'helm/**'
+      - '.github/workflows/helm-lint.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'helm/**'
+
+jobs:
+  lint:
+    name: Lint & Template
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Helm lint (default values — k3d/Traefik)
+        run: helm lint ./helm --strict
+
+      - name: Helm lint (GKE values)
+        run: helm lint ./helm -f helm/values-gke.yaml --strict
+
+      - name: Helm template (default values)
+        run: helm template anon-news ./helm --namespace anon-news > /dev/null
+
+      - name: Helm template (GKE values)
+        run: helm template anon-news ./helm -f helm/values-gke.yaml --namespace anon-news > /dev/null
+
+      - name: Helm template diff (show rendered output for review)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "=== Default (k3d/Traefik) ==="
+          helm template anon-news ./helm --namespace anon-news | head -100
+          echo ""
+          echo "=== GKE (nginx) ==="
+          helm template anon-news ./helm -f helm/values-gke.yaml --namespace anon-news | head -100

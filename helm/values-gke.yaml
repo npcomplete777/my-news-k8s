@@ -1,0 +1,73 @@
+# GKE Standard overrides for The Self-Observing Observatory
+# Usage: helm upgrade --install anon-news ./helm -f helm/values-gke.yaml -n anon-news
+# Cost target: <$20/month on single e2-small (2 vCPU, 2GB RAM)
+
+backend:
+  replicas: 1
+  image:
+    repository: us-central1-docker.pkg.dev/o11y-observatory/anon-news/backend
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+frontend:
+  replicas: 1
+  image:
+    repository: us-central1-docker.pkg.dev/o11y-observatory/anon-news/frontend
+    tag: latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+postgres:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+  storage:
+    size: 5Gi
+    storageClass: standard-rwo
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+  tls:
+    enabled: false
+
+dash0:
+  enabled: true
+  authToken: ""
+  dashboards:
+    enabled: true
+  alerts:
+    enabled: true
+  syntheticChecks:
+    enabled: true
+    frontendUrl: "https://anon-news.example.com"
+    backendHealthUrl: "https://anon-news.example.com/api/health"
+    telemetryApiUrl: "https://anon-news.example.com/api/telemetry/metrics"
+    locations:
+      - "eu-west-1"
+      - "us-east-1"
+  views:
+    enabled: true

@@ -1,0 +1,138 @@
+{{- if and .Values.dash0.enabled .Values.dash0.dashboards.enabled }}
+apiVersion: dashboard.dash0.com/v1
+kind: PersesDashboard
+metadata:
+  name: {{ .Release.Name }}-app-overview
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: dashboard
+spec:
+  display:
+    name: "Application Health Overview"
+  duration: "1h"
+  variables: []
+  panels:
+    request-rate:
+      kind: Panel
+      spec:
+        display:
+          name: "Request Rate"
+          description: "HTTP requests per second by status code"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(rate(http_server_request_duration_seconds_count{namespace="{{ .Release.Namespace }}"}[5m])) by (http_response_status_code)'
+                  seriesNameFormat: '{{`{{http_response_status_code}}`}}'
+    error-rate:
+      kind: Panel
+      spec:
+        display:
+          name: "Error Rate (%)"
+          description: "Percentage of 5xx responses"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: '100 * sum(rate(http_server_request_duration_seconds_count{namespace="{{ .Release.Namespace }}", http_response_status_code=~"5.."}[5m])) / sum(rate(http_server_request_duration_seconds_count{namespace="{{ .Release.Namespace }}"}[5m]))'
+                  seriesNameFormat: "error %"
+    latency-percentiles:
+      kind: Panel
+      spec:
+        display:
+          name: "Request Latency (p50 / p95 / p99)"
+          description: "HTTP request duration percentiles"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'histogram_quantile(0.50, sum(rate(http_server_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le))'
+                  seriesNameFormat: "p50"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le))'
+                  seriesNameFormat: "p95"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le))'
+                  seriesNameFormat: "p99"
+    active-pods:
+      kind: Panel
+      spec:
+        display:
+          name: "Active Pods"
+          description: "Running pods by workload"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'sum(kube_pod_status_phase{namespace="{{ .Release.Namespace }}", phase="Running"}) by (pod)'
+                  seriesNameFormat: '{{`{{pod}}`}}'
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: "Overview"
+          collapse:
+            open: true
+        items:
+          - x: 0
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/request-rate"
+          - x: 12
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/error-rate"
+          - x: 0
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/latency-percentiles"
+          - x: 12
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/active-pods"
+{{- end }}

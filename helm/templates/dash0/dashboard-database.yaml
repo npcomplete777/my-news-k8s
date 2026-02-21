@@ -1,0 +1,145 @@
+{{- if and .Values.dash0.enabled .Values.dash0.dashboards.enabled }}
+apiVersion: dashboard.dash0.com/v1
+kind: PersesDashboard
+metadata:
+  name: {{ .Release.Name }}-database
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: dashboard
+spec:
+  display:
+    name: "Database Performance"
+  duration: "1h"
+  variables: []
+  panels:
+    connection-pool:
+      kind: Panel
+      spec:
+        display:
+          name: "HikariCP Connection Pool"
+          description: "Active, idle, and pending connections"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'hikaricp_connections_active{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "active"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'hikaricp_connections_idle{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "idle"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'hikaricp_connections_pending{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "pending"
+    connection-pool-max:
+      kind: Panel
+      spec:
+        display:
+          name: "Connection Pool Utilization"
+          description: "Active connections vs pool max size"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'hikaricp_connections_active{namespace="{{ .Release.Namespace }}"} / hikaricp_connections_max{namespace="{{ .Release.Namespace }}"}'
+                  seriesNameFormat: "utilization %"
+    query-latency:
+      kind: Panel
+      spec:
+        display:
+          name: "DB Query Latency"
+          description: "Database query duration (p50 / p95)"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'histogram_quantile(0.50, sum(rate(db_client_operation_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le))'
+                  seriesNameFormat: "p50"
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'histogram_quantile(0.95, sum(rate(db_client_operation_duration_seconds_bucket{namespace="{{ .Release.Namespace }}"}[5m])) by (le))'
+                  seriesNameFormat: "p95"
+    connection-acquire-time:
+      kind: Panel
+      spec:
+        display:
+          name: "Connection Acquire Time"
+          description: "Time to acquire a connection from the pool"
+        plugin:
+          kind: TimeSeriesChart
+          spec:
+            legend:
+              position: bottom
+        queries:
+          - kind: TimeSeriesQuery
+            spec:
+              plugin:
+                kind: PrometheusTimeSeriesQuery
+                spec:
+                  query: 'rate(hikaricp_connections_acquire_seconds_sum{namespace="{{ .Release.Namespace }}"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{namespace="{{ .Release.Namespace }}"}[5m])'
+                  seriesNameFormat: "avg acquire time (s)"
+  layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: "Database"
+          collapse:
+            open: true
+        items:
+          - x: 0
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/connection-pool"
+          - x: 12
+            "y": 0
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/connection-pool-max"
+          - x: 0
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/query-latency"
+          - x: 12
+            "y": 8
+            width: 12
+            height: 8
+            content:
+              $ref: "#/spec/panels/connection-acquire-time"
+{{- end }}
