@@ -15,7 +15,7 @@ env:
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/o11y-news-frontend
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -113,3 +113,45 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  update-image-tags:
+    name: Update Helm Image Tags
+    needs: [build-backend, build-frontend]
+    if: always() && (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install yq
+        run: |
+          wget -qO /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64
+          chmod +x /usr/local/bin/yq
+
+      - name: Update backend image tag
+        if: needs.build-backend.result == 'success'
+        env:
+          SHORT_SHA: ${{ github.sha }}
+        run: yq e -i ".backend.image.tag = \"${SHORT_SHA::7}\"" helm/values-gke.yaml
+
+      - name: Update frontend image tag
+        if: needs.build-frontend.result == 'success'
+        env:
+          SHORT_SHA: ${{ github.sha }}
+        run: yq e -i ".frontend.image.tag = \"${SHORT_SHA::7}\"" helm/values-gke.yaml
+
+      - name: Commit and push updated tags
+        env:
+          SHORT_SHA: ${{ github.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add helm/values-gke.yaml
+          if git diff --staged --quiet; then
+            echo "No tag changes to commit"
+          else
+            git commit -m "chore: update image tags to ${SHORT_SHA::7} [skip ci]"
+            git push
+          fi
