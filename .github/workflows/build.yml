@@ -125,10 +125,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install yq
-        run: |
-          wget -qO /usr/local/bin/yq \
-            https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64
-          chmod +x /usr/local/bin/yq
+        uses: mikefarah/yq@master
 
       - name: Update backend image tag
         if: needs.build-backend.result == 'success'

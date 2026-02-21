@@ -34,9 +34,9 @@ export function LiveTelemetryPulse() {
 
   if (error || !metrics) return null;
 
-  const rps = metrics.requestsPerSecond;
+  const rps = metrics.requestRate;
   const errorRate = metrics.errorRate;
-  const p99 = metrics.p99LatencyMs;
+  const p99 = metrics.latencyP99Ms;
 
   const hasData = rps !== null || errorRate !== null || p99 !== null;
   if (!hasData) return null;

@@ -26,14 +26,15 @@ export interface SpanDTO {
 
 /** Aggregated live metrics from Prometheus/Dash0. Null fields mean data unavailable. */
 export interface MetricsSummaryDTO {
-  requestsPerSecond: number | null;
+  requestRate: number | null;        // requests per second
   errorRate: number | null;          // percentage 0–100
-  p99LatencyMs: number | null;
-  activeSpans: number | null;
-  dbQueryCount: number | null;
-  cacheHitRatio: number | null;      // 0.0–1.0
-  circuitBreakerStates: Record<string, number>;  // name → 1=CLOSED, 0=OPEN
-  collectedAt: string;               // ISO-8601 instant
+  latencyP50Ms: number | null;
+  latencyP95Ms: number | null;
+  latencyP99Ms: number | null;
+  jvmHeapUsedMb: number | null;
+  activeDbConnections: number | null;
+  pollerStatuses: Record<string, string>;
+  updatedAt: string;                 // ISO-8601 instant
 }
 
 /** A single structured log entry. PII is redacted server-side. */
