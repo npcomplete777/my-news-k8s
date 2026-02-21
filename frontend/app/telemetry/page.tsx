@@ -1,6 +1,7 @@
 'use client';
 
 import { PrivacyNotice } from '@/components/telemetry/PrivacyNotice';
+import { LoadGenerator } from '@/components/telemetry/LoadGenerator';
 import { MetricsGrid } from '@/components/telemetry/MetricsGrid';
 import { TraceList } from '@/components/telemetry/TraceList';
 import { ServiceMap } from '@/components/telemetry/ServiceMap';
@@ -29,6 +30,7 @@ export default function TelemetryOverviewPage() {
   return (
     <div className="flex flex-col gap-6">
       <PrivacyNotice />
+      <LoadGenerator />
 
       {/* Metrics */}
       <section>

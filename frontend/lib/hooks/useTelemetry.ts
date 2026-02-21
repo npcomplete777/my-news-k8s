@@ -17,9 +17,8 @@ import {
 } from '@/lib/api';
 import { useSSE } from './useSSE';
 
-const SSE_URL =
-  (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080') +
-  '/api/telemetry/traces/stream';
+// Relative URL — nginx ingress routes /api/* → backend in production.
+const SSE_URL = '/api/telemetry/traces/stream';
 
 /** SSE stream of recent traces — updates every ~3 s from the backend. */
 export function useLiveTraces() {

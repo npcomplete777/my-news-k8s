@@ -17,7 +17,12 @@ import type {
 } from './telemetry-types';
 import { getSessionId } from './session';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+// Browser: use '' (relative URL) so nginx ingress routes /api/* → backend.
+// Server-side (Next.js Node.js process inside cluster): use ClusterIP env var.
+const API_URL =
+  typeof window !== 'undefined'
+    ? ''
+    : (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080');
 
 function getApiKey(): string {
   if (typeof window !== 'undefined') {
