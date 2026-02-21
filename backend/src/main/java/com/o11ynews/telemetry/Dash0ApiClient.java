@@ -159,11 +159,13 @@ public class Dash0ApiClient {
         if (properties.getApi().getAuthToken().isBlank()) return Optional.empty();
         try {
             long now = Instant.now().getEpochSecond();
+            // Use named template vars {q}/{t} so build() properly URL-encodes the values,
+            // preventing PromQL label selectors like {job="x"} from being misread as URI vars.
             PrometheusResponse resp = client.get()
                     .uri(b -> b.path(METRICS_PATH)
-                               .queryParam("query", promQuery)
-                               .queryParam("time", now)
-                               .build())
+                               .queryParam("query", "{q}")
+                               .queryParam("time", "{t}")
+                               .build(promQuery, now))
                     .retrieve()
                     .body(PrometheusResponse.class);
             return extractFirstScalar(resp);
@@ -180,9 +182,9 @@ public class Dash0ApiClient {
             long now = Instant.now().getEpochSecond();
             PrometheusResponse resp = client.get()
                     .uri(b -> b.path(METRICS_PATH)
-                               .queryParam("query", promQuery)
-                               .queryParam("time", now)
-                               .build())
+                               .queryParam("query", "{q}")
+                               .queryParam("time", "{t}")
+                               .build(promQuery, now))
                     .retrieve()
                     .body(PrometheusResponse.class);
             if (resp == null || resp.data() == null || resp.data().result() == null) return Collections.emptyList();
