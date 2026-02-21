@@ -6,7 +6,7 @@ backend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-backend
-    tag: latest
+    tag: e79b8cc
     pullPolicy: Always
   resources:
     requests:
