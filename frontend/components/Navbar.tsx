@@ -8,6 +8,7 @@ import { SearchBar } from './SearchBar';
 const navLinks = [
   { href: '/', label: 'Feed' },
   { href: '/bookmarks', label: 'Bookmarks' },
+  { href: '/telemetry', label: 'Telemetry' },
   { href: '/settings', label: 'Settings' },
 ];
 

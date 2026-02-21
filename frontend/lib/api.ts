@@ -8,6 +8,14 @@ import type {
   User,
   UserPreferences,
 } from './types';
+import type {
+  TraceDTO,
+  SpanDTO,
+  MetricsSummaryDTO,
+  LogEntryDTO,
+  ServiceMapDTO,
+} from './telemetry-types';
+import { getSessionId } from './session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -20,9 +28,11 @@ function getApiKey(): string {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}${path}`;
+  const sessionId = getSessionId();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'X-API-Key': getApiKey(),
+    ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
     ...options.headers,
   };
 
@@ -134,3 +144,39 @@ export async function getFeeds(): Promise<FeedSource[]> {
 // --- SWR fetcher ---
 
 export const fetcher = <T>(path: string): Promise<T> => request<T>(path);
+
+// --- Telemetry (public endpoints — no API key required, X-Session-Id forwarded) ---
+
+export async function getTelemetryTraces(
+  params: { minutes?: number; errorOnly?: boolean; limit?: number } = {}
+): Promise<TraceDTO[]> {
+  const q = buildQuery({
+    minutes: params.minutes ?? 5,
+    errorOnly: String(params.errorOnly ?? false),
+    limit: params.limit ?? 50,
+  });
+  return request<TraceDTO[]>(`/api/telemetry/traces${q}`);
+}
+
+export async function getTelemetryTrace(traceId: string): Promise<SpanDTO[]> {
+  return request<SpanDTO[]>(`/api/telemetry/traces/${encodeURIComponent(traceId)}`);
+}
+
+export async function getTelemetryMetrics(): Promise<MetricsSummaryDTO> {
+  return request<MetricsSummaryDTO>('/api/telemetry/metrics');
+}
+
+export async function getTelemetryLogs(
+  params: { minutes?: number; minSeverity?: string; limit?: number } = {}
+): Promise<LogEntryDTO[]> {
+  const q = buildQuery({
+    minutes: params.minutes ?? 10,
+    minSeverity: params.minSeverity,
+    limit: params.limit ?? 100,
+  });
+  return request<LogEntryDTO[]>(`/api/telemetry/logs${q}`);
+}
+
+export async function getTelemetryServiceMap(minutes = 30): Promise<ServiceMapDTO> {
+  return request<ServiceMapDTO>(`/api/telemetry/service-map?minutes=${minutes}`);
+}
