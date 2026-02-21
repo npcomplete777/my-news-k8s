@@ -1,5 +1,5 @@
 {{- if and .Values.dash0.enabled .Values.dash0.syntheticChecks.enabled }}
-apiVersion: checks.dash0.com/v1
+apiVersion: operator.dash0.com/v1alpha1
 kind: Dash0SyntheticCheck
 metadata:
   name: {{ .Release.Name }}-telemetry-api

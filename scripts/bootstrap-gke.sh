@@ -119,11 +119,12 @@ helm repo update dash0
 DASH0_HELM_ARGS=(
   --namespace "$NAMESPACE_DASH0"
   --set operator.dash0Export.enabled=true
-  --set operator.dash0Export.dash0.apiEndpoint=https://ingress.eu-west-1.aws.dash0.com
+  --set operator.dash0Export.endpoint=ingress.eu-west-1.aws.dash0.com:4317
+  --set operator.dash0Export.apiEndpoint=https://api.eu-west-1.aws.dash0.com
 )
 
 if [[ -n "$DASH0_AUTH_TOKEN" ]]; then
-  DASH0_HELM_ARGS+=(--set operator.dash0Export.dash0.authorization.token="$DASH0_AUTH_TOKEN")
+  DASH0_HELM_ARGS+=(--set operator.dash0Export.token="$DASH0_AUTH_TOKEN")
 fi
 
 helm upgrade --install dash0-operator dash0/dash0-operator \

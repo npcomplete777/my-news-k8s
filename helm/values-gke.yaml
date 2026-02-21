@@ -58,9 +58,9 @@ dash0:
   enabled: true
   authToken: ""
   dashboards:
-    enabled: true
+    enabled: false  # PersesDashboard CRD not available via Dash0 Operator
   alerts:
-    enabled: true
+    enabled: false  # PrometheusRule CRD requires Prometheus Operator (not installed)
   syntheticChecks:
     enabled: true
     frontendUrl: "https://anon-news.example.com"
