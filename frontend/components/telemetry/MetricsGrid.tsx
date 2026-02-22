@@ -58,19 +58,23 @@ export function MetricsGrid() {
   const errorStatus: Status =
     errorRate === null ? 'neutral' : errorRate > 5 ? 'error' : errorRate > 1 ? 'warn' : 'ok';
 
-  const p99 = metrics?.p99LatencyMs ?? null;
+  const p99 = metrics?.latencyP99Ms ?? null;
   const p99Status: Status = p99 === null ? 'neutral' : p99 > 1000 ? 'warn' : 'ok';
 
-  const hitRatio = metrics?.cacheHitRatio ?? null;
-  const hitStatus: Status = hitRatio === null ? 'neutral' : hitRatio > 0.8 ? 'ok' : 'warn';
+  const p95 = metrics?.latencyP95Ms ?? null;
+
+  const heapMb = metrics?.jvmHeapUsedMb ?? null;
+  const heapStatus: Status = heapMb === null ? 'neutral' : heapMb > 1200 ? 'warn' : 'ok';
+
+  const dbConns = metrics?.activeDbConnections ?? null;
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         <MetricCard
           label="Requests / sec"
-          value={metrics?.requestsPerSecond != null ? metrics.requestsPerSecond.toFixed(2) : null}
-          status={metrics?.requestsPerSecond != null ? 'ok' : 'neutral'}
+          value={metrics?.requestRate != null ? metrics.requestRate.toFixed(2) : null}
+          status={metrics?.requestRate != null ? 'ok' : 'neutral'}
         />
         <MetricCard
           label="Error rate"
@@ -85,47 +89,47 @@ export function MetricsGrid() {
           status={p99Status}
         />
         <MetricCard
-          label="Active spans"
-          value={metrics?.activeSpans != null ? String(metrics.activeSpans) : null}
+          label="P95 latency"
+          value={p95 != null ? p95.toFixed(0) : null}
+          unit="ms"
           status="neutral"
         />
         <MetricCard
-          label="DB queries"
-          value={metrics?.dbQueryCount != null ? String(metrics.dbQueryCount) : null}
-          status="neutral"
+          label="JVM heap"
+          value={heapMb != null ? heapMb.toFixed(0) : null}
+          unit="MB"
+          status={heapStatus}
         />
         <MetricCard
-          label="Cache hit ratio"
-          value={hitRatio != null ? (hitRatio * 100).toFixed(1) : null}
-          unit="%"
-          status={hitStatus}
+          label="DB connections"
+          value={dbConns != null ? String(dbConns) : null}
+          status="neutral"
         />
       </div>
 
-      {metrics?.circuitBreakerStates &&
-        Object.keys(metrics.circuitBreakerStates).length > 0 && (
-          <div>
-            <p className="mb-2 text-xs text-zinc-500">Circuit Breakers</p>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(metrics.circuitBreakerStates).map(([name, state]) => (
-                <span
-                  key={name}
-                  className={`badge ${
-                    state === 1
-                      ? 'bg-emerald-900/50 text-emerald-400'
-                      : 'bg-red-900/50 text-red-400'
-                  }`}
-                >
-                  {name}: {state === 1 ? 'CLOSED' : 'OPEN'}
-                </span>
-              ))}
-            </div>
+      {metrics?.pollerStatuses && Object.keys(metrics.pollerStatuses).length > 0 && (
+        <div>
+          <p className="mb-2 text-xs text-zinc-500">News Pollers</p>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(metrics.pollerStatuses).map(([name, status]) => (
+              <span
+                key={name}
+                className={`badge ${
+                  status === 'OK'
+                    ? 'bg-emerald-900/50 text-emerald-400'
+                    : 'bg-red-900/50 text-red-400'
+                }`}
+              >
+                {name}: {status}
+              </span>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-      {metrics?.collectedAt && (
+      {metrics?.updatedAt && (
         <p className="text-xs text-zinc-600">
-          Updated {formatDistanceToNow(new Date(metrics.collectedAt), { addSuffix: true })}
+          Updated {formatDistanceToNow(new Date(metrics.updatedAt), { addSuffix: true })}
         </p>
       )}
     </div>
