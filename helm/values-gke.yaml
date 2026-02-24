@@ -6,7 +6,7 @@ backend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-backend
-    tag: 8a38c3f
+    tag: 27eaed9
     pullPolicy: Always
   env:
     SPRING_PROFILES_ACTIVE: kubernetes
