@@ -88,15 +88,15 @@ localOtel:
         cpu: 150m
         memory: 256Mi
 dash0:
-  enabled: true
+  enabled: false # free trial expired — all Dash0 exporters disabled (templates preserved)
   authToken: "" # injected via ArgoCD helm param (not in git)
   dataset: "o11y-news"
   dashboards:
-    enabled: false # PersesDashboard CRD not available via Dash0 Operator
+    enabled: false
   alerts:
-    enabled: false # PrometheusRule CRD requires Prometheus Operator (not installed)
+    enabled: false
   syntheticChecks:
-    enabled: true
+    enabled: false
     frontendUrl: "https://34-172-174-213.sslip.io"
     backendHealthUrl: "https://34-172-174-213.sslip.io/api/health"
     telemetryApiUrl: "https://34-172-174-213.sslip.io/api/telemetry/metrics"
@@ -104,4 +104,4 @@ dash0:
       - "eu-west-1"
       - "us-east-1"
   views:
-    enabled: true
+    enabled: false
