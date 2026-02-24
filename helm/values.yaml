@@ -95,7 +95,7 @@ localOtel:
         cpu: 200m
         memory: 128Mi
   jaeger:
-    image: "jaegertracing/all-in-one:1.64"
+    image: "jaegertracing/all-in-one:latest"
     resources:
       requests:
         cpu: 50m
