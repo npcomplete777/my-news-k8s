@@ -50,6 +50,12 @@ spec:
               value: "http/protobuf"
             - name: OTEL_SERVICE_NAME
               value: "o11y-news"
+            # Override Micrometer metrics URL directly (bypasses ${} resolution issues)
+            - name: MANAGEMENT_METRICS_EXPORT_OTLP_URL
+              value: "http://otelcol:4318/v1/metrics"
+            # Clear Dash0 LD_PRELOAD so only our otel-agent javaagent runs
+            - name: LD_PRELOAD
+              value: ""
             {{- end }}
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://{{ include "o11y-news.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.auth.database }}"
