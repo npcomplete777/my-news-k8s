@@ -46,7 +46,7 @@ postgres:
 ingress:
   enabled: true
   className: nginx
-  host: "34-172-174-213.sslip.io"
+  host: "o11y-alchemy.com"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
@@ -97,9 +97,9 @@ dash0:
     enabled: false
   syntheticChecks:
     enabled: false
-    frontendUrl: "https://34-172-174-213.sslip.io"
-    backendHealthUrl: "https://34-172-174-213.sslip.io/api/health"
-    telemetryApiUrl: "https://34-172-174-213.sslip.io/api/telemetry/metrics"
+    frontendUrl: "https://o11y-alchemy.com"
+    backendHealthUrl: "https://o11y-alchemy.com/api/health"
+    telemetryApiUrl: "https://o11y-alchemy.com/api/telemetry/metrics"
     locations:
       - "eu-west-1"
       - "us-east-1"

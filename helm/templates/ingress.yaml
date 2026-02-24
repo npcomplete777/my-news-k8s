@@ -20,6 +20,7 @@ spec:
     - {{- if .Values.ingress.host }}
       hosts:
         - {{ .Values.ingress.host }}
+        - www.{{ .Values.ingress.host }}
       {{- end }}
       secretName: {{ include "o11y-news.fullname" . }}-tls
   {{- end }}
@@ -43,4 +44,21 @@ spec:
                 name: {{ include "o11y-news.fullname" . }}-frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
+    - host: www.{{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
 {{- end }}
