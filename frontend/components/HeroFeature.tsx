@@ -1,12 +1,12 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 
-const TOPIC_TAGS = [
-  'OpenTelemetry',
-  'Distributed Tracing',
-  'Agentic AI',
-  'Kubernetes',
-  'MCP',
-];
+const VIDEO_ID = 'hlS44t0_z0M';
+const THUMBNAIL_URL = `https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`;
+const BLOG_URL = 'https://npcomplete777.github.io/o11y-alchemy/posts/ontology-driven-migration/';
+const BLOG_TITLE = 'Ontology-Driven Migration: A Framework for Moving Observability Platforms';
 
 const SIDEBAR_CARDS = [
   {
@@ -38,88 +38,106 @@ const SIDEBAR_CARDS = [
   },
 ];
 
-const VALIS_OUTPUT_LINES = [
-  { color: 'text-stone-500', text: '$ valis analyze --trace-id 4f2a8c1e...' },
-  { color: 'text-emerald-400', text: '✓ Loaded 847 spans across 12 services' },
-  { color: 'text-stone-400', text: '' },
-  { color: 'text-amber-400', text: '⚠ ANOMALY DETECTED — order-service' },
-  { color: 'text-stone-400', text: '  p99 latency: 2,847ms  (+340% vs baseline)' },
-  { color: 'text-stone-400', text: '  error rate:  43.5%    (baseline: 0.2%)' },
-  { color: 'text-stone-400', text: '' },
-  { color: 'text-sky-400', text: '↳ Root cause: ProcessPayment → ArrangeShipping' },
-  { color: 'text-stone-400', text: '  cascade failure on payment-svc timeout' },
-  { color: 'text-stone-400', text: '  first failure: 14:22:07.441 UTC' },
-  { color: 'text-stone-400', text: '' },
-  { color: 'text-emerald-400', text: '✓ Baseline updated — 22 services calibrated' },
-  { color: 'text-stone-500', text: '  next analysis window: 5m' },
+const TOPIC_TAGS = [
+  'OpenTelemetry',
+  'Distributed Tracing',
+  'Agentic AI',
+  'Kubernetes',
+  'MCP',
 ];
 
 export function HeroFeature() {
+  const [playing, setPlaying] = useState(false);
+
   return (
     <section className="grid grid-cols-1 gap-10 py-10 lg:grid-cols-[1fr_300px]">
       {/* Left column — editorial content */}
       <div className="flex flex-col gap-6">
         {/* Category label */}
         <p className="text-xs font-bold uppercase tracking-widest text-stone-400 dark:text-zinc-500">
-          Agentic AI · Observability
+          Observability · Platform Engineering
         </p>
 
         {/* Headline */}
         <h1 className="font-display font-black uppercase leading-none tracking-tighter text-stone-900 dark:text-zinc-100 text-4xl sm:text-5xl lg:text-6xl">
-          WHAT IS THE{'\n'}SELF-OBSERVING{'\n'}SYSTEM?
+          HOW TO MIGRATE<br />YOUR OBSERVABILITY<br />PLATFORM
         </h1>
 
-        {/* Video / terminal placeholder */}
+        {/* YouTube video — thumbnail until clicked, then embedded player */}
         <div className="relative aspect-video w-full overflow-hidden bg-stone-900">
-          {/* Gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-800 to-zinc-900" />
+          {playing ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1`}
+              title={BLOG_TITLE}
+              className="absolute inset-0 h-full w-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          ) : (
+            <>
+              {/* Thumbnail */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={THUMBNAIL_URL}
+                alt={BLOG_TITLE}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    `https://img.youtube.com/vi/${VIDEO_ID}/hqdefault.jpg`;
+                }}
+              />
 
-          {/* Dot grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-              backgroundSize: '24px 24px',
-            }}
-          />
+              {/* Dark overlay on hover */}
+              <div className="absolute inset-0 bg-black/10 transition-colors hover:bg-black/25" />
 
-          {/* VALIS terminal output */}
-          <div className="absolute inset-0 flex items-center justify-center px-6 py-8 sm:px-10 sm:py-10">
-            <pre className="w-full max-w-xl overflow-hidden font-mono text-[11px] leading-relaxed sm:text-xs">
-              {VALIS_OUTPUT_LINES.map((line, i) => (
-                <div key={i} className={line.color}>
-                  {line.text || '\u00A0'}
-                </div>
-              ))}
-            </pre>
-          </div>
-
-          {/* Play button */}
-          <div className="absolute inset-0 flex items-end justify-end p-4">
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-              aria-label="Play demo"
-            >
-              <svg
-                className="h-4 w-4 translate-x-px"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                aria-hidden="true"
+              {/* YouTube-style play button */}
+              <button
+                type="button"
+                onClick={() => setPlaying(true)}
+                className="absolute inset-0 flex items-center justify-center"
+                aria-label="Play video"
               >
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-            </button>
-          </div>
+                <div className="flex h-16 w-[72px] items-center justify-center rounded-xl bg-[#FF0000] shadow-lg transition-all hover:scale-110 hover:bg-[#cc0000]">
+                  <svg
+                    className="h-6 w-6 translate-x-0.5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </button>
+            </>
+          )}
         </div>
+
+        {/* Blog article link — directly below the video */}
+        <a
+          href={BLOG_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-start justify-between gap-4 border-t border-stone-200 pt-4 dark:border-zinc-800"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-zinc-500">
+              From the blog · O11y Alchemy
+            </span>
+            <span className="text-sm font-semibold leading-snug text-stone-900 transition-colors group-hover:text-stone-500 dark:text-zinc-100 dark:group-hover:text-zinc-400">
+              {BLOG_TITLE}
+            </span>
+          </div>
+          <span className="mt-1 shrink-0 text-xs font-bold uppercase tracking-widest text-stone-400 transition-colors group-hover:text-stone-900 dark:text-zinc-500 dark:group-hover:text-zinc-100">
+            Read →
+          </span>
+        </a>
 
         {/* Description */}
         <p className="max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-zinc-400 sm:text-base">
-          O11y Alchemy is a live demonstration of agentic AI observability. VALIS — an
-          MCP-native tool for Claude — continuously analyzes distributed traces, detects
-          anomalies against learned baselines, and performs root cause correlation across
-          a real Kubernetes cluster running OpenTelemetry instrumentation.
+          A structured approach to planning and executing observability platform migrations —
+          from legacy APM to modern OTLP-native systems. Covers signal taxonomy,
+          instrumentation gap analysis, and phased cutover strategies. Built and validated
+          using VALIS, an MCP-powered agentic AI tool for Claude.
         </p>
 
         {/* CTAs */}
@@ -128,10 +146,12 @@ export function HeroFeature() {
             Explore Telemetry
           </Link>
           <a
-            href="https://npcomplete777.github.io/o11y-alchemy/"
+            href={BLOG_URL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn-outline"
           >
-            Read the Blog
+            Read the Article
           </a>
         </div>
 
