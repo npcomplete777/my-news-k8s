@@ -44,7 +44,7 @@ export function LiveTelemetryPulse() {
   return (
     <Link
       href="/telemetry"
-      className="group flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-2.5 text-xs transition-colors hover:border-zinc-700 hover:bg-zinc-900/70"
+      className="group mb-6 flex items-center gap-4 border border-stone-200 bg-stone-50 px-4 py-2.5 text-xs text-stone-500 transition-colors hover:border-stone-400 hover:bg-stone-100 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/70"
     >
       {/* Live pulse dot */}
       <div className="flex items-center gap-1.5 shrink-0">
@@ -52,19 +52,19 @@ export function LiveTelemetryPulse() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        <span className="font-medium text-zinc-400">Live</span>
+        <span className="font-medium text-stone-500 dark:text-zinc-400">Live</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-zinc-500">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-stone-400 dark:text-zinc-500">
         {rps !== null && (
           <span>
-            <span className="font-mono text-zinc-300">{rps.toFixed(1)}</span>
+            <span className="font-mono text-stone-800 dark:text-zinc-300">{rps.toFixed(1)}</span>
             {' '}req/s
           </span>
         )}
         {errorRate !== null && (
           <span>
-            <span className={`font-mono ${errorRate > 5 ? 'text-red-400' : 'text-zinc-300'}`}>
+            <span className={`font-mono ${errorRate > 5 ? 'text-red-500' : 'text-stone-800 dark:text-zinc-300'}`}>
               {errorRate.toFixed(1)}%
             </span>
             {' '}errors
@@ -72,13 +72,13 @@ export function LiveTelemetryPulse() {
         )}
         {p99 !== null && (
           <span>
-            <span className="font-mono text-zinc-300">{Math.round(p99)}</span>
+            <span className="font-mono text-stone-800 dark:text-zinc-300">{Math.round(p99)}</span>
             {' '}ms p99
           </span>
         )}
       </div>
 
-      <span className="ml-auto shrink-0 text-zinc-700 transition-colors group-hover:text-zinc-500">
+      <span className="ml-auto shrink-0 text-stone-300 transition-colors group-hover:text-stone-500 dark:text-zinc-700 dark:group-hover:text-zinc-500">
         telemetry →
       </span>
     </Link>

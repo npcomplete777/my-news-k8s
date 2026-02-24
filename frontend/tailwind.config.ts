@@ -20,6 +20,7 @@ const config: Config = {
         cncf: '#446ca9',
       },
       fontFamily: {
+        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         sans: [
           '-apple-system',
           'BlinkMacSystemFont',

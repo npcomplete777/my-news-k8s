@@ -4,70 +4,59 @@
 
 @layer base {
   html {
-    @apply bg-zinc-950 text-zinc-100 antialiased;
+    @apply antialiased;
   }
-
   body {
-    @apply min-h-screen bg-zinc-950;
+    @apply min-h-screen bg-white text-stone-900 dark:bg-zinc-950 dark:text-zinc-100;
   }
-
   ::selection {
-    @apply bg-amber-500/30 text-amber-50;
+    @apply bg-stone-200 text-stone-900 dark:bg-amber-500/30 dark:text-amber-50;
   }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-zinc-900;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-zinc-700 hover:bg-zinc-600;
-  }
+  ::-webkit-scrollbar { @apply w-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-stone-100 dark:bg-zinc-900; }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-stone-300 hover:bg-stone-400 dark:bg-zinc-700 dark:hover:bg-zinc-600; }
 }
 
 @layer components {
   .card {
-    @apply rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 transition-all duration-200
-           hover:border-zinc-700 hover:bg-zinc-900;
+    @apply border border-stone-200 bg-white p-4 transition-all duration-200
+           hover:border-stone-400
+           dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-zinc-700 dark:hover:bg-zinc-900;
   }
-
   .badge {
-    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium;
   }
-
   .btn-primary {
-    @apply rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white
-           transition-colors hover:bg-amber-500 focus:outline-none focus:ring-2
-           focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900;
+    @apply bg-stone-900 px-6 py-3 text-sm font-bold uppercase tracking-widest text-white
+           transition-colors hover:bg-stone-700 focus:outline-none
+           dark:bg-white dark:text-stone-900 dark:hover:bg-stone-100;
   }
-
+  .btn-outline {
+    @apply border-2 border-stone-900 px-6 py-3 text-sm font-bold uppercase tracking-widest
+           text-stone-900 transition-all hover:bg-stone-900 hover:text-white focus:outline-none
+           dark:border-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-100 dark:hover:text-stone-900;
+  }
   .btn-ghost {
-    @apply rounded-lg px-3 py-2 text-sm font-medium text-zinc-400
-           transition-colors hover:bg-zinc-800 hover:text-zinc-200;
+    @apply px-3 py-2 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900
+           dark:text-zinc-400 dark:hover:text-zinc-100;
   }
-
   .input {
-    @apply rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100
-           placeholder-zinc-500 transition-colors focus:border-amber-500 focus:outline-none
-           focus:ring-1 focus:ring-amber-500;
+    @apply border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900
+           placeholder-stone-400 transition-colors focus:border-stone-900 focus:outline-none
+           focus:ring-1 focus:ring-stone-900
+           dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500
+           dark:focus:border-amber-500 dark:focus:ring-amber-500;
   }
-
   .tag-pill {
-    @apply inline-flex items-center rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs
-           font-medium text-zinc-400 transition-colors hover:bg-zinc-700 hover:text-zinc-300;
+    @apply inline-flex items-center border border-stone-200 px-3 py-1 text-xs
+           font-medium text-stone-600 transition-colors hover:border-stone-900 hover:text-stone-900
+           dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-400 dark:hover:text-zinc-200;
   }
-
   .skeleton {
-    @apply animate-pulse rounded bg-zinc-800;
+    @apply animate-pulse rounded bg-stone-100 dark:bg-zinc-800;
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 }
