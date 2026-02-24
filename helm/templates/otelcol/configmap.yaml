@@ -27,7 +27,7 @@ data:
 
     exporters:
       otlp/jaeger:
-        endpoint: "{{ include "o11y-news.fullname" . }}-jaeger:4317"
+        endpoint: "jaeger:4317"
         tls:
           insecure: true
 

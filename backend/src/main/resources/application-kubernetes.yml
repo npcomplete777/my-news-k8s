@@ -8,11 +8,11 @@ spring:
       minimum-idle: 3
 
 management:
-  metrics:
-    export:
-      otlp:
-        # In-cluster OTel collector (replaces Dash0 operator endpoint)
-        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otelcol:4318}/v1/metrics
+  # Spring Boot 3.3+ canonical OTLP metrics namespace (replaces management.metrics.export.otlp)
+  otlp:
+    metrics:
+      export:
+        url: http://otelcol:4318/v1/metrics
 
 server:
   port: 8080

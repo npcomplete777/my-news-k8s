@@ -50,11 +50,14 @@ spec:
               value: "http/protobuf"
             - name: OTEL_SERVICE_NAME
               value: "o11y-news"
-            # Override Micrometer metrics URL directly (bypasses ${} resolution issues)
-            - name: MANAGEMENT_METRICS_EXPORT_OTLP_URL
+            # Spring Boot 3.3+ OTLP metrics namespace (management.otlp.metrics.export.url)
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
               value: "http://otelcol:4318/v1/metrics"
             # Clear Dash0 LD_PRELOAD so only our otel-agent javaagent runs
             - name: LD_PRELOAD
+              value: ""
+            # Clear Dash0 API token so TelemetryService uses LocalTelemetryClient (Jaeger+Prometheus)
+            - name: DASH0_API_TOKEN
               value: ""
             {{- end }}
             - name: SPRING_DATASOURCE_URL
