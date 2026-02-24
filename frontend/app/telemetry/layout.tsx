@@ -16,7 +16,7 @@ export default function TelemetryLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 pb-20 pt-6">
+    <div className="dark min-h-screen bg-zinc-950 px-4 pb-20 pt-6">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-4">
           {/* Header */}
