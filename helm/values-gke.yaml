@@ -6,7 +6,7 @@ backend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-backend
-    tag: e79b8cc
+    tag: 8a38c3f
     pullPolicy: Always
   env:
     SPRING_PROFILES_ACTIVE: kubernetes
@@ -87,7 +87,6 @@ localOtel:
       limits:
         cpu: 150m
         memory: 256Mi
-
 dash0:
   enabled: true
   authToken: "" # injected via ArgoCD helm param (not in git)
