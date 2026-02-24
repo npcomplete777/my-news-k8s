@@ -108,7 +108,7 @@ const SLIDE_ARTICLE_1: HeroArticle = {
   ],
 };
 
-// TODO: Replace placeholder slides (index 1, 2) with real video IDs and articles
+// Add more slides here when new videos are published
 const SLIDES: Slide[] = [
   {
     videoId: 'hlS44t0_z0M',
@@ -117,34 +117,6 @@ const SLIDES: Slide[] = [
     headline: ['THE DERIVED', 'ONTOLOGY:', 'MIGRATIONS AT SCALE'],
     tags: ['OpenTelemetry', 'Agentic AI', 'Platform Migration', 'MCP'],
     article: SLIDE_ARTICLE_1,
-  },
-  {
-    // TODO: Replace with real video ID for VALIS MCP deep-dive
-    videoId: 'hlS44t0_z0M',
-    videoTitle: 'VALIS MCP — AI-Native Observability for Claude',
-    category: 'Agentic AI · MCP',
-    headline: ['VALIS:', 'AI-NATIVE', 'OBSERVABILITY'],
-    tags: ['MCP', 'Agentic AI', 'Claude'],
-    // TODO: Replace with real article once published
-    blogUrl: 'https://npcomplete777.github.io/o11y-alchemy/',
-    blogSource: 'O11y Alchemy',
-    blogTitle: 'VALIS: Building an AI-Native Observability Tool for Claude',
-    blogBlurb:
-      'How I built VALIS — an MCP server that gives Claude direct access to distributed traces, metrics, and logs. Covers the Model Context Protocol, ClickHouse as a trace store, and the agentic patterns that make root-cause analysis feel like a conversation.',
-  },
-  {
-    // TODO: Replace with real video ID for OTel Kubernetes episode
-    videoId: 'hlS44t0_z0M',
-    videoTitle: 'OpenTelemetry in Production Kubernetes',
-    category: 'OpenTelemetry · Kubernetes',
-    headline: ['OPENTELEMETRY', 'IN PRODUCTION', 'KUBERNETES'],
-    tags: ['OpenTelemetry', 'Kubernetes', 'Java'],
-    // TODO: Replace with real article once published
-    blogUrl: 'https://npcomplete777.github.io/o11y-alchemy/',
-    blogSource: 'O11y Alchemy',
-    blogTitle: 'OpenTelemetry in Production Kubernetes: Zero to Distributed Tracing',
-    blogBlurb:
-      'A practical walkthrough of instrumenting Spring Boot microservices with the OpenTelemetry Java agent on GKE — from configuring the OTel Collector and Jaeger to writing PromQL queries against real trace-derived metrics.',
   },
 ];
 
