@@ -60,3 +60,8 @@
 @layer utilities {
   .text-balance { text-wrap: balance; }
 }
+
+@keyframes slideProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
