@@ -17,7 +17,7 @@ backend:
   env:
     SPRING_PROFILES_ACTIVE: kubernetes
     SPRING_THREADS_VIRTUAL_ENABLED: "true"
-    JAVA_TOOL_OPTIONS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0"
+    JAVA_TOOL_OPTIONS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -javaagent:/otel-agent/opentelemetry-javaagent.jar"
 
 frontend:
   replicas: 1
@@ -81,6 +81,37 @@ dash0:
       - "eu-west-1"
   views:
     enabled: true
+
+localOtel:
+  enabled: true
+  javaAgentImage: "ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.11.0"
+  otelcol:
+    image: "otel/opentelemetry-collector-contrib:0.118.0"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+  jaeger:
+    image: "jaegertracing/all-in-one:1.64"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  prometheus:
+    image: "prom/prometheus:v3.1.0"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
 
 apiKeys:
   reddit:

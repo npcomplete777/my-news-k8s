@@ -1,0 +1,56 @@
+{{- if .Values.localOtel.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "o11y-news.fullname" . }}-otelcol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "o11y-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otelcol
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "o11y-news.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: otelcol
+  template:
+    metadata:
+      labels:
+        {{- include "o11y-news.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: otelcol
+    spec:
+      containers:
+        - name: otelcol
+          image: {{ .Values.localOtel.otelcol.image }}
+          args: ["--config=/etc/otelcol/config.yaml"]
+          ports:
+            - name: grpc
+              containerPort: 4317
+            - name: http
+              containerPort: 4318
+            - name: metrics
+              containerPort: 8889
+            - name: health
+              containerPort: 13133
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otelcol
+          resources:
+            {{- toYaml .Values.localOtel.otelcol.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 10
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "o11y-news.fullname" . }}-otelcol
+{{- end }}

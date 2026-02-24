@@ -19,6 +19,15 @@ spec:
         app.kubernetes.io/component: backend
     spec:
       serviceAccountName: {{ include "o11y-news.fullname" . }}-backend
+      {{- if .Values.localOtel.enabled }}
+      initContainers:
+        - name: otel-agent
+          image: {{ .Values.localOtel.javaAgentImage }}
+          command: ["cp", "/javaagent.jar", "/otel-agent/opentelemetry-javaagent.jar"]
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel-agent
+      {{- end }}
       containers:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
@@ -34,6 +43,14 @@ spec:
               value: {{ .Values.backend.env.SPRING_THREADS_VIRTUAL_ENABLED | quote }}
             - name: JAVA_TOOL_OPTIONS
               value: {{ .Values.backend.env.JAVA_TOOL_OPTIONS | quote }}
+            {{- if .Values.localOtel.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otelcol:4318"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_SERVICE_NAME
+              value: "o11y-news"
+            {{- end }}
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://{{ include "o11y-news.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.auth.database }}"
             - name: SPRING_DATASOURCE_USERNAME
@@ -49,6 +66,11 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "o11y-news.fullname" . }}-api-keys
+          {{- if .Values.localOtel.enabled }}
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel-agent
+          {{- end }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           startupProbe:
@@ -73,3 +95,8 @@ spec:
             periodSeconds: 15
             failureThreshold: 3
             timeoutSeconds: 5
+      {{- if .Values.localOtel.enabled }}
+      volumes:
+        - name: otel-agent
+          emptyDir: {}
+      {{- end }}

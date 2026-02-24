@@ -1,0 +1,25 @@
+{{- if .Values.localOtel.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: otelcol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "o11y-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otelcol
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "o11y-news.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: otelcol
+  ports:
+    - name: grpc
+      port: 4317
+      targetPort: grpc
+    - name: http
+      port: 4318
+      targetPort: http
+    - name: metrics
+      port: 8889
+      targetPort: metrics
+{{- end }}

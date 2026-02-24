@@ -41,18 +41,25 @@ public class TelemetryService {
             "resilience4j_circuitbreaker_state{service_name=\"" + SERVICE + "\"}";
 
     private final Dash0ApiClient dash0ApiClient;
+    private final LocalTelemetryClient localClient;
     private final PiiRedactionService piiRedactionService;
     private final SessionCorrelationService sessionCorrelationService;
     private final Dash0Properties properties;
 
     public TelemetryService(Dash0ApiClient dash0ApiClient,
+                            LocalTelemetryClient localClient,
                             PiiRedactionService piiRedactionService,
                             SessionCorrelationService sessionCorrelationService,
                             Dash0Properties properties) {
         this.dash0ApiClient = dash0ApiClient;
+        this.localClient = localClient;
         this.piiRedactionService = piiRedactionService;
         this.sessionCorrelationService = sessionCorrelationService;
         this.properties = properties;
+    }
+
+    private boolean useLocal() {
+        return properties.getApi().getAuthToken().isBlank();
     }
 
     // -------------------------------------------------------------------------
@@ -66,7 +73,9 @@ public class TelemetryService {
     @WithSpan
     public List<TraceDTO> getRecentTraces(String sessionId, int timeRangeMinutes) {
         int limit = properties.getTelemetry().getMaxTraces() * 4; // fetch more spans than traces needed
-        List<Dash0Span> spans = dash0ApiClient.querySpans(timeRangeMinutes, false, limit);
+        List<Dash0Span> spans = useLocal()
+                ? localClient.querySpans(timeRangeMinutes, false, limit)
+                : dash0ApiClient.querySpans(timeRangeMinutes, false, limit);
         return buildTraceDTOs(spans, sessionId);
     }
 
@@ -76,7 +85,9 @@ public class TelemetryService {
     @WithSpan
     public List<TraceDTO> getRecentErrorTraces(String sessionId, int timeRangeMinutes) {
         int limit = properties.getTelemetry().getMaxTraces() * 4;
-        List<Dash0Span> spans = dash0ApiClient.querySpans(timeRangeMinutes, true, limit);
+        List<Dash0Span> spans = useLocal()
+                ? localClient.querySpans(timeRangeMinutes, true, limit)
+                : dash0ApiClient.querySpans(timeRangeMinutes, true, limit);
         return buildTraceDTOs(spans, sessionId);
     }
 
@@ -138,8 +149,9 @@ public class TelemetryService {
      */
     @WithSpan
     public List<SpanDTO> getTraceSpans(String traceId, int timeRangeMinutes) {
-        List<Dash0Span> spans = dash0ApiClient.querySpans(timeRangeMinutes, false,
-                properties.getTelemetry().getMaxTraces() * 8);
+        List<Dash0Span> spans = useLocal()
+                ? localClient.querySpans(timeRangeMinutes, false, properties.getTelemetry().getMaxTraces() * 8)
+                : dash0ApiClient.querySpans(timeRangeMinutes, false, properties.getTelemetry().getMaxTraces() * 8);
         return spans.stream()
                 .filter(s -> traceId.equals(s.traceId()))
                 .map(this::toSpanDTO)
@@ -172,14 +184,13 @@ public class TelemetryService {
      */
     @WithSpan
     public MetricsSummaryDTO getMetricsSummary() {
-        double requestRate = dash0ApiClient.queryInstantMetric(PROM_REQUEST_RATE).orElse(0.0);
-        double errorRate   = dash0ApiClient.queryInstantMetric(PROM_ERROR_RATE).orElse(0.0);
-        double p50         = dash0ApiClient.queryInstantMetric(PROM_LATENCY_P50).orElse(0.0);
-        double p95         = dash0ApiClient.queryInstantMetric(PROM_LATENCY_P95).orElse(0.0);
-        double p99         = dash0ApiClient.queryInstantMetric(PROM_LATENCY_P99).orElse(0.0);
-        double heapMb      = dash0ApiClient.queryInstantMetric(PROM_JVM_HEAP).orElse(0.0);
-        long activeDb      = dash0ApiClient.queryInstantMetric(PROM_DB_CONNECTIONS)
-                                 .map(Double::longValue).orElse(0L);
+        double requestRate = metric(PROM_REQUEST_RATE);
+        double errorRate   = metric(PROM_ERROR_RATE);
+        double p50         = metric(PROM_LATENCY_P50);
+        double p95         = metric(PROM_LATENCY_P95);
+        double p99         = metric(PROM_LATENCY_P99);
+        double heapMb      = metric(PROM_JVM_HEAP);
+        long activeDb      = (long) metric(PROM_DB_CONNECTIONS);
 
         Map<String, String> pollerStatuses = resolvePollerStatuses();
 
@@ -200,8 +211,16 @@ public class TelemetryService {
      * Resolves each resilience4j circuit breaker's current state by finding the
      * state gauge with value=1 across all circuit breaker series.
      */
+    private double metric(String promQuery) {
+        return useLocal()
+                ? localClient.queryInstantMetric(promQuery).orElse(0.0)
+                : dash0ApiClient.queryInstantMetric(promQuery).orElse(0.0);
+    }
+
     private Map<String, String> resolvePollerStatuses() {
-        List<PrometheusResult> results = dash0ApiClient.queryInstantMetrics(PROM_CIRCUIT_BREAKERS);
+        List<PrometheusResult> results = useLocal()
+                ? localClient.queryInstantMetrics(PROM_CIRCUIT_BREAKERS)
+                : dash0ApiClient.queryInstantMetrics(PROM_CIRCUIT_BREAKERS);
         Map<String, String> statuses = new LinkedHashMap<>();
 
         for (PrometheusResult result : results) {
@@ -239,7 +258,9 @@ public class TelemetryService {
     @WithSpan
     public List<LogEntryDTO> getRecentLogs(int timeRangeMinutes, String minSeverity) {
         int limit = properties.getTelemetry().getMaxLogs();
-        List<Dash0Log> logs = dash0ApiClient.queryLogs(timeRangeMinutes, minSeverity, limit);
+        List<Dash0Log> logs = useLocal()
+                ? localClient.queryLogs(timeRangeMinutes, minSeverity, limit)
+                : dash0ApiClient.queryLogs(timeRangeMinutes, minSeverity, limit);
         return logs.stream()
                 .map(this::toLogEntryDTO)
                 .sorted(Comparator.comparing(LogEntryDTO::timestamp).reversed())
@@ -284,8 +305,9 @@ public class TelemetryService {
      */
     @WithSpan
     public ServiceMapDTO getServiceMap() {
-        List<Dash0Span> spans = dash0ApiClient.querySpans(15, false,
-                properties.getTelemetry().getMaxTraces() * 8);
+        List<Dash0Span> spans = useLocal()
+                ? localClient.querySpans(15, false, properties.getTelemetry().getMaxTraces() * 8)
+                : dash0ApiClient.querySpans(15, false, properties.getTelemetry().getMaxTraces() * 8);
 
         Map<String, ServiceNode> nodes = new LinkedHashMap<>();
         nodes.put(SERVICE, new ServiceNode(SERVICE, "o11y-news (backend)", "backend"));

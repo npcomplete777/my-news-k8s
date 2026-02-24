@@ -8,6 +8,10 @@ backend:
     repository: ghcr.io/npcomplete777/o11y-news-backend
     tag: e79b8cc
     pullPolicy: Always
+  env:
+    SPRING_PROFILES_ACTIVE: kubernetes
+    SPRING_THREADS_VIRTUAL_ENABLED: "true"
+    JAVA_TOOL_OPTIONS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -javaagent:/otel-agent/opentelemetry-javaagent.jar"
   resources:
     requests:
       cpu: 200m
@@ -53,6 +57,37 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   tls:
     enabled: true
+localOtel:
+  enabled: true
+  javaAgentImage: "ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.11.0"
+  otelcol:
+    image: "otel/opentelemetry-collector-contrib:0.118.0"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+  jaeger:
+    image: "jaegertracing/all-in-one:1.64"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 150m
+        memory: 256Mi
+  prometheus:
+    image: "prom/prometheus:v3.1.0"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 150m
+        memory: 256Mi
+
 dash0:
   enabled: true
   authToken: "" # injected via ArgoCD helm param (not in git)

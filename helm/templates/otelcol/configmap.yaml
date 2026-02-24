@@ -1,0 +1,57 @@
+{{- if .Values.localOtel.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "o11y-news.fullname" . }}-otelcol
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "o11y-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: otelcol
+data:
+  config.yaml: |
+    extensions:
+      health_check:
+        endpoint: "0.0.0.0:13133"
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+
+    processors:
+      batch:
+        timeout: 5s
+
+    exporters:
+      otlp/jaeger:
+        endpoint: "{{ include "o11y-news.fullname" . }}-jaeger:4317"
+        tls:
+          insecure: true
+
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      debug:
+        verbosity: basic
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/jaeger]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug]
+{{- end }}

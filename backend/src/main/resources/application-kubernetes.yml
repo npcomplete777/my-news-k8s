@@ -11,8 +11,8 @@ management:
   metrics:
     export:
       otlp:
-        # In-cluster, the Dash0 operator injects the collector endpoint
-        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://dash0-operator-opentelemetry-collector.dash0-operator.svc.cluster.local:4318}/v1/metrics
+        # In-cluster OTel collector (replaces Dash0 operator endpoint)
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://otelcol:4318}/v1/metrics
 
 server:
   port: 8080
@@ -44,3 +44,9 @@ dash0:
     base-url: ${DASH0_API_URL:https://api.eu-west-1.aws.dash0.com}
     auth-token: ${DASH0_API_TOKEN:}
     dataset: ${DASH0_DATASET:default}
+
+# Local OTel stack (used when DASH0_API_TOKEN is empty)
+local:
+  otel:
+    jaeger-url: ${LOCAL_OTEL_JAEGER_URL:http://jaeger:16686}
+    prometheus-url: ${LOCAL_OTEL_PROMETHEUS_URL:http://prometheus:9090}
