@@ -32,7 +32,6 @@ data:
         create_schema: false
         traces_table_name: traces_raw
         logs_table_name: logs_raw
-        metrics_gauge_table_name: metrics_gauge_raw
         compress: lz4
         timeout: 10s
         retry_on_failure:
@@ -44,9 +43,6 @@ data:
           enabled: true
           num_consumers: 4
           queue_size: 500
-        batch:
-          timeout: 5s
-          send_batch_size: 10000
 
       debug:
         verbosity: basic

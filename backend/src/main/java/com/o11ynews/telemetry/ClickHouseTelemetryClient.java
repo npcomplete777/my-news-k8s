@@ -267,7 +267,7 @@ public class ClickHouseTelemetryClient {
         for (String metricName : List.of("jvm.memory.used", "jvm_memory_used_bytes")) {
             String sql = """
                     SELECT Value / 1048576.0 AS heapMb
-                    FROM metrics_gauge
+                    FROM otel_metrics_gauge
                     WHERE MetricName = '%s'
                       AND (Attributes['jvm.memory.type'] = 'heap'
                            OR Attributes['area'] = 'heap')
@@ -293,7 +293,7 @@ public class ClickHouseTelemetryClient {
                     : "";
             String sql = """
                     SELECT Value AS connections
-                    FROM metrics_gauge
+                    FROM otel_metrics_gauge
                     WHERE MetricName = '%s'
                       %s
                       AND TimeUnix >= now() - INTERVAL %d MINUTE
@@ -317,7 +317,7 @@ public class ClickHouseTelemetryClient {
                     Attributes['name']  AS cbName,
                     Attributes['state'] AS cbState,
                     Value
-                FROM metrics_gauge
+                FROM otel_metrics_gauge
                 WHERE (MetricName = 'resilience4j.circuitbreaker.state'
                     OR MetricName = 'resilience4j_circuitbreaker_state')
                   AND TimeUnix >= now() - INTERVAL %d MINUTE
