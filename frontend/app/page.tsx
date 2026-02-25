@@ -1,10 +1,6 @@
-import { Suspense } from 'react';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import { BlogArticles } from '@/components/BlogArticles';
 import { LiveTelemetryPulse } from '@/components/LiveTelemetryPulse';
-import { SourceFilter } from '@/components/SourceFilter';
-import { TopicFilter } from '@/components/TopicFilter';
-import { ArticleFeed } from '@/components/ArticleFeed';
 
 export default function HomePage() {
   return (
@@ -13,26 +9,6 @@ export default function HomePage() {
         <LiveTelemetryPulse />
         <HeroCarousel />
         <BlogArticles />
-
-        {/* Feed section */}
-        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[200px_1fr]">
-          {/* Sidebar filters */}
-          <aside className="flex flex-col gap-4">
-            <Suspense fallback={<div className="skeleton h-52 rounded-lg" />}>
-              <SourceFilter />
-            </Suspense>
-            <Suspense fallback={<div className="skeleton h-36 rounded-lg" />}>
-              <TopicFilter />
-            </Suspense>
-          </aside>
-
-          {/* Article feed */}
-          <div className="min-w-0">
-            <Suspense fallback={<div className="skeleton h-96 rounded-lg" />}>
-              <ArticleFeed />
-            </Suspense>
-          </div>
-        </div>
       </div>
     </div>
   );

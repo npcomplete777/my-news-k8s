@@ -6,7 +6,7 @@ import { clsx } from 'clsx';
 import { useTheme } from '@/components/ThemeProvider';
 
 const navLinks = [
-  { href: '/', label: 'Feed' },
+  { href: '/feed', label: 'Feed' },
   { href: '/telemetry', label: 'Telemetry' },
   { href: '/about', label: 'About' },
   { href: '/bookmarks', label: 'Bookmarks' },
@@ -29,10 +29,7 @@ export function Navbar() {
         {/* Center nav links */}
         <div className="hidden md:flex flex-1 items-center justify-center gap-8">
           {navLinks.map((link) => {
-            const isActive =
-              link.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(link.href);
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
             return (
               <Link
                 key={link.href}
