@@ -15,8 +15,10 @@ interface HeroArticle {
 }
 
 interface Slide {
-  videoId: string;
-  videoTitle: string;
+  videoId?: string;
+  videoTitle?: string;
+  heroImage?: string;  // path relative to /public, used when no video
+  heroImageAlt?: string;
   category: string;
   headline: string[];
   tags: string[];
@@ -159,6 +161,51 @@ const SLIDE_ARTICLE_2: HeroArticle = {
   ],
 };
 
+const SLIDE_ARTICLE_3: HeroArticle = {
+  title: 'ClickHouse on a Raspberry Pi 5: A Surprisingly Capable Observability Backend',
+  subtitle:
+    '228 million rows of OpenTelemetry data compressed to 1.37 GiB — on a $120 board running k3s, ArgoCD, Grafana, and custom OTel receivers simultaneously',
+  sections: [
+    {
+      heading: 'The Hardware',
+      paragraphs: [
+        "There's a recurring assumption in the observability world that serious analytical databases need serious hardware — a fat EC2 instance, a managed cloud offering, or at minimum a beefy on-prem server. I've been quietly running ClickHouse on a Raspberry Pi 5 for several months, and the numbers are compelling enough to write down.",
+        "The board is a Raspberry Pi 5 Model B Rev 1.1, running Ubuntu 24.04.3 LTS on aarch64. 16 GB LPDDR4X RAM, quad-core ARM Cortex-A76 at 2.4 GHz. The key upgrade is a ~917 GB NVMe SSD via M.2 HAT+ on the Pi 5's PCIe 2.0 lane. Without fast storage, ClickHouse's write throughput would be the obvious bottleneck. With the SSD, disk is never a concern. Total cost of board + HAT + SSD: roughly $120–150 depending on the SSD you pick. It also serves as a NAS via Samba. It's doing a lot.",
+      ],
+    },
+    {
+      heading: 'ClickHouse: 228 Million Rows',
+      paragraphs: [
+        "ClickHouse 25.10.2.65 (official ARM64 build) runs natively via apt, managed by systemd. No Docker — direct host install for maximum I/O performance. Uptime at time of writing: 22 days, 8 hours. No restarts, no babysitting.",
+        "The otel database holds the full OpenTelemetry schema plus a custom unifi_metrics table: 192 million metric rows at 824 MB, 10.3 million trace spans at 362 MB, 5.4 million log records at 138 MB — 228 million total rows in 1.37 GiB on disk. 192 million metric data points compressed to 824 MB. That's the ClickHouse value proposition in one row.",
+        "One trip hazard worth calling out: if you install ClickHouse and walk away, the system log tables will quietly eat your disk. system.trace_log alone consumed 47.98 GiB; system.text_log another 5.34 GiB. Fix this immediately after install by setting TTL policies on each system log table in config.xml. Tame these early — they're the most common homelab ClickHouse mistake.",
+      ],
+    },
+    {
+      heading: 'k3s, ArgoCD, and a GitOps Loop on $120',
+      paragraphs: [
+        "k3s is the right Kubernetes distribution for single-node ARM deployments — full conformant Kubernetes under 100 MB, SQLite instead of etcd, tiny memory footprint. The cluster has been running for 83 days with only 4 pod restarts, all graceful. ArgoCD runs inside k3s — all 7 components — and manages a single Application: the custom OTel collector.",
+        "GitLab pushes a new image → GitLab Runner (also running on the Pi) builds it → ArgoCD detects the change and rolls out the new deployment. The whole CI/CD loop runs on the same $120 board it's deploying to. That's a satisfying kind of bootstrapping. Grafana runs directly on the host, reading from ClickHouse over localhost via the Grafana ClickHouse plugin. PostgreSQL 16 serves as Grafana's metadata store. Both managed by systemd.",
+      ],
+    },
+    {
+      heading: 'The Custom OTel Collector',
+      paragraphs: [
+        "The collector running in k3s isn't stock otelcol-contrib — it's a custom binary built with the OpenTelemetry Collector Builder, including receivers I wrote specifically for my home network.",
+        "unifireceiver scrapes the UniFi Dream Machine's API every 30 seconds, producing VAP-level metrics per access point, per SSID, per radio band: tx/rx bytes and packets, error and drop rates, connected client counts, connection quality scores (CCQ), average RSSI, Dream Machine temperature, switch port throughput, and WAN health. The unifi_metrics table now holds 436,640+ rows. Each scrape produces ~2,000 data points. The network picture this gives is surprisingly complete.",
+        "airflowreceiver pulls DAG run metrics and pool utilization from Apache Airflow. githubreceiver tracks repository activity from the GitHub API — contribution velocity and open issue counts over time. hostmetrics collects the Pi's own system metrics at process granularity: ~850 metrics per scrape cycle from process-level CPU and memory collection alone. The standard otlp receiver listens on gRPC :4317 and HTTP :4318 for any application that wants to push telemetry locally. An OpAMP supervisor is wired in for future remote config management without touching ArgoCD.",
+      ],
+    },
+    {
+      heading: 'Is a Pi 5 Enough?',
+      paragraphs: [
+        "For a homelab observability stack? Absolutely. 22+ days of zero-maintenance runtime. 228 million rows of OTel data in 1.37 GiB on disk. 2,000+ metrics per 30-second scrape from UniFi alone. Full k3s, ArgoCD, Grafana, and GitLab Runner running in parallel. The Pi 5's ARM Cortex-A76 cores are legitimately fast — ClickHouse's vectorized execution engine translates to ARM NEON SIMD instructions and performs well.",
+        "Where you'll hit limits: very high cardinality workloads, or environments where you need the in-memory analytics that larger machines enable. For home network monitoring, distributed tracing from a handful of services, and general infrastructure observability, the Pi 5 has not been the bottleneck once. The real bottleneck is always your own time configuring it — which is also true of every other observability setup I've ever built.",
+      ],
+    },
+  ],
+};
+
 // Add more slides here when new videos are published
 const SLIDES: Slide[] = [
   {
@@ -176,6 +223,14 @@ const SLIDES: Slide[] = [
     headline: ['THE', 'SPATIAL', 'SIGNAL'],
     tags: ['Apple Vision Pro', 'visionOS', 'MCP', 'OpenTelemetry', 'Spatial Computing'],
     article: SLIDE_ARTICLE_2,
+  },
+  {
+    heroImage: '/pi5-homelab.jpg',
+    heroImageAlt: 'Raspberry Pi 5 single-board computer',
+    category: 'Homelab · Edge Computing',
+    headline: ['228M ROWS', 'ON $120', 'HARDWARE'],
+    tags: ['ClickHouse', 'Raspberry Pi 5', 'k3s', 'OpenTelemetry', 'Homelab'],
+    article: SLIDE_ARTICLE_3,
   },
 ];
 
@@ -361,7 +416,9 @@ export function HeroCarousel() {
   }, [current, paused, playing, progressKey, advance]);
 
   const slide = SLIDES[current];
-  const thumbnailUrl = `https://img.youtube.com/vi/${slide.videoId}/maxresdefault.jpg`;
+  const thumbnailUrl = slide.videoId
+    ? `https://img.youtube.com/vi/${slide.videoId}/maxresdefault.jpg`
+    : '';
 
   return (
     <section
@@ -371,31 +428,48 @@ export function HeroCarousel() {
     >
       {/* Left column */}
       <div className="flex flex-col gap-6">
-        {/* Progress indicators */}
-        <div className="flex gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => goTo(i)}
-              className="relative h-0.5 flex-1 overflow-hidden bg-stone-200 dark:bg-zinc-800"
-              aria-label={`Go to slide ${i + 1}`}
-            >
-              {i < current && (
-                <span className="absolute inset-0 bg-stone-900 dark:bg-zinc-100" />
-              )}
-              {i === current && (
-                <span
-                  key={progressKey}
-                  className="absolute inset-y-0 left-0 bg-stone-900 dark:bg-zinc-100"
-                  style={{
-                    animation: `slideProgress ${INTERVAL_MS}ms linear forwards`,
-                    animationPlayState: paused || playing ? 'paused' : 'running',
-                  }}
-                />
-              )}
-            </button>
-          ))}
+
+        {/* Slide nav cards — magazine-style navigation */}
+        <div className="flex gap-0 border-t border-stone-200 dark:border-zinc-800">
+          {SLIDES.map((s, i) => {
+            const isActive = i === current;
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goTo(i)}
+                className={`group relative flex-1 overflow-hidden py-3 pr-4 text-left transition-colors
+                  ${i > 0 ? 'border-l border-stone-200 pl-4 dark:border-zinc-800' : ''}
+                  ${isActive ? '' : 'hover:bg-stone-50 dark:hover:bg-zinc-900/50'}`}
+                aria-label={`Go to slide ${i + 1}`}
+              >
+                {/* Active top-border progress bar */}
+                {isActive && (
+                  <span
+                    key={progressKey}
+                    className="absolute left-0 top-0 h-0.5 bg-stone-900 dark:bg-zinc-100"
+                    style={{
+                      animation: `slideProgress ${INTERVAL_MS}ms linear forwards`,
+                      animationPlayState: paused || playing ? 'paused' : 'running',
+                    }}
+                  />
+                )}
+                {!isActive && (
+                  <span className="absolute left-0 top-0 h-0.5 w-full bg-stone-100 dark:bg-zinc-800" />
+                )}
+                <span className={`block text-[9px] font-bold uppercase tracking-widest mb-1
+                  ${isActive ? 'text-stone-500 dark:text-zinc-400' : 'text-stone-300 dark:text-zinc-600'}`}>
+                  {String(i + 1).padStart(2, '0')} · {s.category.split(' · ')[0]}
+                </span>
+                <span className={`block text-[11px] font-black uppercase leading-tight tracking-tight
+                  ${isActive
+                    ? 'text-stone-900 dark:text-zinc-100'
+                    : 'text-stone-400 dark:text-zinc-600 group-hover:text-stone-700 dark:group-hover:text-zinc-400'}`}>
+                  {s.headline.join(' ')}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Category */}
@@ -413,9 +487,9 @@ export function HeroCarousel() {
           ))}
         </h1>
 
-        {/* Video */}
-        <div className="relative aspect-video w-full overflow-hidden bg-stone-900">
-          {playing ? (
+        {/* Media — video or static image */}
+        <div className="group/media relative aspect-video w-full overflow-hidden bg-stone-900">
+          {slide.videoId && playing ? (
             <iframe
               src={`https://www.youtube.com/embed/${slide.videoId}?autoplay=1`}
               title={slide.videoTitle}
@@ -423,7 +497,7 @@ export function HeroCarousel() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
-          ) : (
+          ) : slide.videoId ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -447,26 +521,45 @@ export function HeroCarousel() {
                   </svg>
                 </div>
               </button>
+            </>
+          ) : slide.heroImage ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={slide.heroImage}
+                alt={slide.heroImageAlt ?? ''}
+                className="h-full w-full object-contain bg-stone-100 dark:bg-zinc-900"
+              />
+            </>
+          ) : null}
+
+          {/* Prev / Next arrows — always visible on the media, appear clearly on hover */}
+          {!playing && (
+            <>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); advance(-1); }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-stone-900 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 dark:bg-zinc-800/80 dark:text-zinc-100 dark:hover:bg-zinc-700"
                 aria-label="Previous slide"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); advance(1); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-black/60"
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-stone-900 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 dark:bg-zinc-800/80 dark:text-zinc-100 dark:hover:bg-zinc-700"
                 aria-label="Next slide"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+              {/* Slide counter */}
+              <div className="absolute bottom-3 right-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-bold tabular-nums text-white backdrop-blur-sm">
+                {String(current + 1).padStart(2, '0')} / {String(SLIDES.length).padStart(2, '0')}
+              </div>
             </>
           )}
         </div>
