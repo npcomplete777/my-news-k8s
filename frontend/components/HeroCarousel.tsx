@@ -345,7 +345,7 @@ export function HeroCarousel() {
         </p>
 
         {/* Headline */}
-        <h1 className="font-display font-black uppercase leading-none tracking-tighter text-stone-900 dark:text-zinc-100 text-4xl sm:text-5xl lg:text-6xl">
+        <h1 className="font-display font-black uppercase leading-[0.95] tracking-wide text-stone-900 dark:text-zinc-100 text-5xl sm:text-6xl lg:text-7xl">
           {slide.headline.map((line, i) => (
             <span key={i}>
               {line}
