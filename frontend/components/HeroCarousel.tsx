@@ -108,6 +108,57 @@ const SLIDE_ARTICLE_1: HeroArticle = {
   ],
 };
 
+const SLIDE_ARTICLE_2: HeroArticle = {
+  title: 'The Spatial Signal: Observability on Apple Vision Pro',
+  subtitle:
+    'VALISSpatial renders distributed traces, service topology, and latency metrics as navigable 3D environments — and connects to the same MCP servers that power VALIS',
+  sections: [
+    {
+      heading: 'Why 2D Breaks Down',
+      paragraphs: [
+        "Every observability dashboard eventually hits the same wall. You can add more panels, more rows, more tabs — but the fundamental constraint is the same: a flat rectangle on a flat screen. The mental model required to understand how a request propagates through eight microservices, across three namespaces, under degraded network conditions, is inherently three-dimensional. We compress it into tables and node graphs and hope engineers can mentally reconstruct the spatial relationships that determine whether a system is healthy.",
+        "The premise behind VALISSpatial is straightforward: stop compressing. Render the system as it actually exists — a graph of interdependent services occupying space — and let engineers navigate it directly. Apple Vision Pro provides the first consumer device capable of doing this without the friction that killed earlier AR attempts. Passthrough at 4K, eye tracking with sub-millimeter precision, and native visionOS depth compositing means the rendering feels anchored to the room, not floating in a headset.",
+        "This is an early demo. The rendering is production code; the data pipeline is still being wired. But the core experience — floating service nodes, glowing dependency edges, latency bar charts rising from the floor — is fully implemented and running against live Dash0 telemetry.",
+      ],
+    },
+    {
+      heading: 'What the Immersive Space Renders',
+      paragraphs: [
+        "When you enter the immersive space, VALISSpatial places a force-directed service topology graph at eye level — nodes distributed across an oval roughly 2.1 meters in front of you, arranged by a 25-iteration relaxation algorithm that balances repulsion between services against the attraction of traced call edges.",
+        "Each node is a sphere with an emissive glow shell. The color encodes error rate: teal for healthy (≤1% errors), amber for warning (1–5%), coral red for critical (above 5%). The glow intensity scales with the error rate, so degraded services pulse visibly at the periphery of your vision. Edges are glowing cylinders between parent and child services, thickness proportional to call volume, with directional cones marking the target service.",
+        "Below the topology, at floor level, an arc of 3D bar charts renders per-service latency. X-axis is time, Y-axis is duration capped at 2000ms to prevent outliers from collapsing the scale. The same teal-amber-coral palette maps to latency thresholds, so a service going orange in the topology corresponds to bars going orange in its chart directly below.",
+        "Tapping a node opens a floating detail panel anchored beside it — span count, average latency, error rate, error count, top operations by volume. The Fly Traces feature finds the busiest distributed trace in the current snapshot and animates through it service by service: 1.3 seconds of smooth camera movement to each node, 1.4 seconds of dwell, 2.5 seconds of detail panel, then on to the next hop in the chain. Watching a checkout flow traverse frontend → cart → payment → order → email in real space is qualitatively different from following arrows on a service map.",
+      ],
+    },
+    {
+      heading: 'MCP as the Data Layer',
+      paragraphs: [
+        "VALISSpatial's data architecture mirrors the approach taken in the VALIS MCP server: a vendor-agnostic provider protocol layered over platform-specific MCP clients. The ObservabilityProvider protocol defines three methods — fetchSpans, fetchLogs, fetchMetrics — that every backend implements identically regardless of the source platform.",
+        "The Dash0 provider is fully implemented. It calls dash0_spans_query and dash0_logs_query via a lightweight JSON-RPC 2.0 client (no external SDK dependency — written against the MCP specification directly). The Dynatrace and Datadog providers are stubs awaiting the corresponding backend MCP servers. When those ship, wiring them into VALISSpatial is a single conformance implementation — the 3D rendering layer never changes.",
+        "This matters because the goal isn't a Dash0 visualization app or a Dynatrace visualization app. It's an observability visualization layer that works across whatever platforms an organization actually runs. The MCP abstraction makes that possible without rebuilding the renderer for every vendor.",
+        "For demos and development, a MockProvider generates synthetic telemetry for six services with configurable error rates, and a FileProvider loads pre-recorded Dash0 JSON exports from disk. This means the full immersive experience runs without any live infrastructure — useful for workshops, sales demos, and iteration without cluster access.",
+      ],
+    },
+    {
+      heading: 'Connecting to VALIS',
+      paragraphs: [
+        "The longer-term architecture connects VALISSpatial to VALIS — the Go-based MCP server that already speaks to Dynatrace, Dash0, and a local ClickHouse cluster. VALIS has baseline calibration (EWMA-smoothed per-service thresholds across request rate, error rate, and duration), anomaly detection, and the same vendor-agnostic span normalization that VALISSpatial needs.",
+        "In that configuration, VALISSpatial becomes the spatial front-end for VALIS's analytical backend. Instead of rendering raw spans, it renders VALIS findings: services deviating from baseline shown in the topology graph, anomaly severity encoded in glow intensity, baseline comparison bars overlaid on the latency charts. The Fly Traces feature becomes a guided tour of the current highest-severity incident, moving through services in order of anomaly score rather than raw span volume.",
+        "This isn't speculative — the interfaces already exist on both sides. VALISSpatial's ObservabilityProvider protocol maps cleanly to VALIS's normalized span format. The work is the glue: a VALISProvider implementation that calls the VALIS HTTP API and translates the response. The spatial rendering doesn't change at all.",
+      ],
+    },
+    {
+      heading: 'What This Changes',
+      paragraphs: [
+        "The standard case for spatial computing in enterprise software is questionable. Most workflows don't benefit from being in 3D space. Calendar management, code review, document editing — these are fine on a flat screen. Distributed systems observability is the exception.",
+        "A microservice architecture has genuine spatial structure. Services have proximity (which ones call which), depth (hot paths vs. cold paths), and topology (fan-out, fan-in, critical paths). The relationships that matter for understanding incidents — dependency chains, error propagation paths, cascading latency — are inherently graph-shaped. When you render that graph in the room and can physically walk around it, the spatial memory you form is different from the abstract understanding you build from a 2D diagram. You remember where the payment service sits relative to the fraud check service. You remember that the database nodes cluster in the back-left. When an incident happens, you orient to the topology instead of scanning panels.",
+        "VALISSpatial is a demo. It's not in production anywhere. But it represents a direction that becomes more credible as the device generation matures and the data pipelines get wired. The MCP protocol layer means the visualization infrastructure is already vendor-agnostic. The question is whether the spatial medium earns its place as a genuinely useful tool for on-call engineers — and whether the answer changes when the rendering is connected to real-time anomaly detection rather than raw spans.",
+        "That's what we're building toward.",
+      ],
+    },
+  ],
+};
+
 // Add more slides here when new videos are published
 const SLIDES: Slide[] = [
   {
@@ -117,6 +168,14 @@ const SLIDES: Slide[] = [
     headline: ['THE DERIVED', 'ONTOLOGY:', 'MIGRATIONS AT SCALE'],
     tags: ['OpenTelemetry', 'Agentic AI', 'Platform Migration', 'MCP'],
     article: SLIDE_ARTICLE_1,
+  },
+  {
+    videoId: 'RbMr4FxdZyU',
+    videoTitle: 'VALISSpatial — Observability on Apple Vision Pro',
+    category: 'Spatial Computing · Observability',
+    headline: ['THE', 'SPATIAL', 'SIGNAL'],
+    tags: ['Apple Vision Pro', 'visionOS', 'MCP', 'OpenTelemetry', 'Spatial Computing'],
+    article: SLIDE_ARTICLE_2,
   },
 ];
 
