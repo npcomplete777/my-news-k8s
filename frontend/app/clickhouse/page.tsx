@@ -17,8 +17,8 @@ const BEFORE_STATS = [
 const AFTER_STATS = [
   { value: '3', label: 'Targeted skip indices (TraceId, minmax)', note: 'meaningful only' },
   { value: '13', label: 'Extracted columns per trace', note: 'K8s + HTTP + DB + RPC' },
-  { value: '~50 KB', label: 'Bytes read — HttpMethod GROUP BY', note: 'single column scan' },
-  { value: '5', label: 'Total tables in pipeline', note: 'Null + Target + MV + RED' },
+  { value: '132 KB', label: 'Bytes read — HttpMethod GROUP BY', note: 'measured on live cluster' },
+  { value: '65×', label: 'Fewer bytes vs Map access', note: '8.3 MB → 132 KB' },
 ];
 
 const PROBLEMS = [
@@ -314,23 +314,29 @@ WHERE ServiceName = 'o11y-news'
 GROUP BY time, request_count, error_count
 ORDER BY time;`;
 
-const OTELCOL_CONFIG = `# OTel Collector config — key changes
+const OTELCOL_CONFIG = `# OTel Collector config — key changes (otelcol-contrib 0.118.0)
 exporters:
   clickhouse:
     endpoint: tcp://clickhouse:9000
     database: otel
-    create_schema: false            # ← you manage DDL
+    create_schema: false            # ← you manage DDL, no auto-creation
     traces_table_name: traces_raw   # ← Null engine ingest table
     logs_table_name: logs_raw       # ← Null engine ingest table
-    metrics_gauge_table_name: metrics_gauge_raw
     compress: lz4
     timeout: 10s
     sending_queue:
       num_consumers: 4              # ← 2x more consumers
       queue_size: 500               # ← 5x larger buffer
-    batch:
-      timeout: 5s
-      send_batch_size: 10000        # ← bulk inserts for ClickHouse performance`;
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_max_size: 10000      # ← bulk inserts for ClickHouse efficiency
+    # Note: batch processor is separate from the exporter
+
+# Note: metrics_gauge_table_name is not yet supported in 0.118.0.
+# Gauge metrics continue to write to otel_metrics_gauge (existing table).
+# For traces and logs, the Null+MV pattern is fully active.`;
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
