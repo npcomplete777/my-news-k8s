@@ -14,78 +14,6 @@ export interface BlogArticle {
 // All O11y Alchemy blog articles except "The Derived Ontology" (featured in the hero carousel)
 export const BLOG_ARTICLES: BlogArticle[] = [
   {
-    id: 'language-invariant-anti-patterns',
-    title: 'Anti-Patterns Have Shapes, and Shapes Don\'t Care What Language You Write In',
-    subtitle: 'How I proved that distributed system anti-patterns produce identical trace geometry across Go, Python, and Java — and why that changes everything about autonomous detection.',
-    tags: ['Distributed Tracing', 'Anti-Patterns', 'OpenTelemetry', 'Bayesian Inference'],
-    sections: [
-      {
-        paragraphs: [
-          'A distributed trace is a tree. Each node is a span — a named, timed unit of work. Each edge is a causal relationship: this span caused that span. The tree has a shape.',
-          'I built an autonomous observability system called the Bayesian Trace Topology Analyzer — a detection engine that identifies performance anti-patterns by analyzing the shapes of trace trees. Rather than examining contents, language, or framework specifics, this system focuses on structural geometry.',
-          'Over several weeks, I ran controlled experiments to test the Language-Invariance Hypothesis: "A given anti-pattern produces the same trace geometry regardless of the programming language, runtime, or instrumentation strategy that generated the trace." I tested this against three services in the OpenTelemetry Astronomy Shop demo application, each written in different languages. The same N+1 query anti-pattern was injected into all three via feature flags. The result: identical geometry across all implementations.',
-        ],
-      },
-      {
-        heading: 'What I Mean by "Trace Geometry"',
-        paragraphs: [
-          'For the N+1 pattern — where code iterates over a collection making one network call per item instead of batching — I identified four geometric dimensions:',
-          'Fan-out: The parent span fans out to N child spans plus one initial query, with N scaling linearly relative to input collection size.',
-          'Homogeneity: All repeating children share the same span name, RPC method, and target service. The trace tree resembles a comb — one spine with many identical teeth.',
-          'Temporality: Children execute sequentially, with each starting only after its predecessor completes. Typical inter-span gaps measure 10–20 microseconds, characteristic of a for loop rather than concurrent operations.',
-          'Scaling: Fan-out changes with input size. Doubling the input collection doubles child spans in a strictly linear relationship.',
-          'These four dimensions define a point in trace topology space. The hypothesis predicted the same anti-pattern would occupy identical coordinates regardless of language.',
-        ],
-      },
-      {
-        heading: 'The Experiment',
-        paragraphs: [
-          'The OpenTelemetry Astronomy Shop is a polyglot microservices application with services in Go, Python, Java, JavaScript, C++, Rust, and others. It features feature flags enabling controlled failure and anti-pattern injection.',
-          'Experiment 0 (baseline): The Go checkout service already exhibited a naturally occurring N+1 pattern. The prepOrderItems function iterates over cart items, making individual GetProduct and Convert calls per item. No feature flag injection was necessary.',
-          'Experiment 1: The Python recommendation service with the recommendationServiceNPlusOne flag enabled. When active, the service iterates over product IDs, calling GetProduct individually instead of using batch APIs. Custom span attributes tracked the observability: app.recommendation.mode distinguished batch versus N+1 code paths, app.recommendation.product_count tracked cardinality, and app.recommendation.sequential_call_index tagged loop iterations.',
-          'Experiment 2: The Java ad service with the adServiceNPlusOne flag enabled. The same logical pattern — iterating over ad results and calling GetProduct per item — ran on the JVM with bytecode-injected instrumentation.',
-          'Each experiment ran against the same Dash0 observability backend. The analyzer queried live span data using OTLP/gRPC, analyzed trace topology without knowing the service\'s programming language, and scored confidence using sequential Bayesian inference.',
-        ],
-      },
-      {
-        heading: 'What the Analyzer Saw',
-        paragraphs: [
-          'Go Checkout Service: Fan-out 2N+1 (repeating GetProduct/Convert pairs), homogeneous repeating pairs, sequential temporality, linear scaling, compiled Go with explicit SDK calls, Bayesian confidence 99.9%.',
-          'Python Recommendation Service: Fan-out N+1, homogeneous repeating singles, sequential with 13–17μs inter-span gaps, linear scaling, interpreted CPython with automatic monkey-patched instrumentation, Bayesian confidence 99.9%.',
-          'Java Ad Service: Fan-out N+1, homogeneous repeating singles each with nested gRPC child spans, sequential execution, linear scaling, JVM with bytecode-injected javaagent, Bayesian confidence 99.9%.',
-          'Across all three implementations: fan-out formulas match structurally, homogeneity patterns align, temporality shows consistent sequential execution, scaling relationships remain linear, confidence scores are identical at 99.9%. The only differences appear in runtime type, instrumentation method, and child span duration — implementation details that don\'t affect geometry.',
-        ],
-      },
-      {
-        heading: 'What This Proves',
-        paragraphs: [
-          'Three fundamentally different execution models produced identical trace topology. Go compiled the loop to native machine code with manually written instrumentation. Python interpreted loop bytecode with agent-injected monkey-patching. Java JIT-compiled from JVM bytecode with class-load-time transformation. None of these differences mattered to the detector.',
-          'The N+1 pattern is a property of the algorithm — iterate over a collection and make one call per item. This algorithm produces characteristic trace shapes regardless of machine execution methods. The shape is the invariant.',
-          'After the analyzer flagged the Go checkout service\'s prepOrderItems function at 99.9% confidence, I refactored it. The fix replaced N sequential GetProduct calls with parallel goroutines using errgroup, processing all cart items concurrently. The trace geometry changed immediately — the comb shape collapsed into a fan: a single parent with concurrent children whose start times overlap. Bayesian confidence for N+1 dropped to near zero, confirming the fix without code-level analysis.',
-        ],
-      },
-      {
-        heading: 'Why This Matters',
-        paragraphs: [
-          'One detector covers all languages. Rather than needing separate Go, Python, and Java N+1 detectors, a single trace topology analyzer recognizes comb geometry. It works on any service emitting OpenTelemetry spans.',
-          'Detection is vendor-agnostic. This was proven on Dash0 with OTLP data. The same analysis would work on Dynatrace, Datadog, Jaeger, or any backend storing parent-child span relationships. Geometry exists in the data, not the platform.',
-          'New languages get coverage automatically. Adding Rust or Kotlin services doesn\'t require detector updates. If the new service has a for loop making individual RPC calls, the trace will show the same comb shape and be flagged accordingly.',
-          'The approach extends to other anti-patterns. N+1 is "The Comb" — many identical teeth on one spine. Retry storms are "The Staircase" — repeated calls with growing inter-span gaps and terminal timeout. Sync-over-async is "The Lollipop" — fast operations with one massively long stem. Connection pool exhaustion is "The Hourglass" — bimodal durations where requests either complete instantly or timeout. Each shape is detectable through structural analysis.',
-        ],
-      },
-      {
-        heading: 'How the Detection Works',
-        paragraphs: [
-          'The Bayesian Trace Topology Analyzer uses sequential Bayesian inference to classify trace geometries. For each anti-pattern, evidence signals are binary observations about trace tree structural properties. Each signal has calibrated true positive rate (TPR) and false positive rate (FPR).',
-          'For N+1 detection, the evidence chain includes: repeating child spans, sequential execution, same operation name, linear scaling, and high child count. Each signal updates posterior probability via Bayes\' rule: P(N+1|evidence) = P(evidence|N+1) × P(N+1) / P(evidence).',
-          'Starting from a conservative 3% prior, five positive evidence signals with TPR=0.8 and FPR=0.1 drive the posterior through: 3% → 19.8% → 66.4% → 94.1% → 99.2% → 99.9%. The same engine, signals, and update chain applied to Go, Python, and Java traces produce identical results because geometry remains the same.',
-          'Anti-pattern detection through trace geometry is fundamentally entropy measurement. High fan-out with sequential homogeneous children represents high entropy — many redundant microstates. The geometric signature is the entropy signature, and entropy doesn\'t care what language generated the microstates.',
-        ],
-      },
-    ],
-  },
-
-  {
     id: 'autonomous-remediation-silent-checkout',
     title: 'From 504 Timeout to 35ms: Autonomous Remediation of Silent Checkout Failures',
     subtitle: 'A demonstration of fully autonomous code remediation: VALIS detected a critical silent checkout failure pattern, generated an async Kafka fix, deployed via GitOps, and validated a 4,700x latency improvement — all without human intervention.',
@@ -135,55 +63,107 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 'geometry-of-failure',
     title: 'The Geometry of Failure: Language-Agnostic Anti-Pattern Signatures in Distributed Trace Topology',
-    subtitle: 'Anti-patterns in distributed systems have geometric shapes that are invariant across languages, frameworks, and protocols. Empirical evidence from two production systems demonstrates how trace topology analysis enables language-agnostic anti-pattern detection.',
-    tags: ['Distributed Tracing', 'Anti-Patterns', 'Trace Topology', 'VALIS'],
+    subtitle: 'Anti-patterns in distributed systems produce characteristic geometric signatures in trace topology. I tested this hypothesis across Go, Python, and Java — and the geometry was identical every time.',
+    tags: ['Distributed Tracing', 'Anti-Patterns', 'Trace Topology', 'Bayesian Inference'],
     sections: [
       {
-        heading: 'The Claim',
         paragraphs: [
-          'Anti-patterns in distributed systems produce characteristic geometric signatures in trace topology space. These signatures are invariant across programming languages, communication protocols, and observability platforms.',
-          'A distributed trace forms a tree structure where each node (span) represents a unit of work and edges represent causal relationships. Rather than treating traces merely as debugging tools, analyzing trace topology — the measurable structural properties — reveals something deeper: different anti-patterns occupy distinct clusters in this geometric space regardless of implementation language.',
+          'I\'m going to make a claim that I haven\'t seen anyone else make explicitly, and then back it up with empirical evidence from three production experiments.',
+          'Anti-patterns in distributed systems produce characteristic geometric signatures in trace topology space. These signatures are invariant across programming languages, runtimes, and instrumentation strategies. A system that classifies trace geometry can detect anti-patterns without knowing anything about the underlying implementation.',
+          'I\'ve proven this for the N+1 query pattern across Go, Python, and Java — three fundamentally different runtimes, three different instrumentation strategies, identical geometry every time. I\'ve also observed it for a second anti-pattern (sync-over-async blocking) in a Go + Kafka system. Whether it holds across all anti-pattern types and all languages is the subject of ongoing investigation — but the evidence so far is compelling enough to formalize the framework.',
         ],
       },
       {
-        heading: 'Case Study 1: The Checkout Service (Go + gRPC)',
+        heading: 'What I Mean by "Trace Geometry"',
         paragraphs: [
-          'VALIS detected an N+1 pattern in the OpenTelemetry Astronomy Shop\'s checkout service. Analysis revealed fan-out of 2N+1 scaling with cart size, repeating GetProduct/Convert pairs, sequential non-overlapping execution, and gRPC as the protocol.',
-          'Source code inspection confirmed the prepOrderItems function iterated over cart items, making one GetProduct and Convert call per iteration. The fix involved batching RPC methods to collapse fan-out to a constant 3 calls, achieving 59% latency reduction.',
+          'A distributed trace is a tree. Each node (span) represents a unit of work. Edges represent causal relationships — "this span caused that span." Most observability practice treats traces as debugging artifacts. But traces have topology. The tree has a shape with measurable properties.',
+          'Fan-out: how many children does a parent span produce, and how does that number relate to input size? In an N+1 pattern, fan-out scales linearly with the input collection.',
+          'Homogeneity: are child spans the same type of operation? In an N+1 pattern, all the repeating children have the same span name and target service — the tree looks like a comb, one spine with many identical teeth.',
+          'Temporality: are children concurrent or sequential? In an N+1 pattern, each child starts only after its predecessor completes. There are small inter-span gaps — typically 10–20 microseconds — the signature of a for loop, not a Promise.all.',
+          'Scaling: does fan-out change with input? In an N+1 pattern, doubling the input collection doubles the number of child spans. The relationship is strictly linear.',
+          'These four dimensions define a point in trace topology space. My hypothesis: the same anti-pattern, regardless of language, occupies the same point in this space.',
         ],
       },
       {
-        heading: 'Case Study 2: The Async Kafka Failure (Go + Kafka)',
+        heading: 'The Three Experiments',
         paragraphs: [
-          'A different anti-pattern emerged — synchronous blocking on asynchronous operations. The checkout service blocked on Kafka acknowledgments, converting fire-and-forget operations into synchronous calls blocking for minutes. Properties: moderate fan-out with one dominant outlier, heterogeneous operations, sequential execution with extreme outlier, bimodal duration distribution.',
-          'Post-fix improvement: 4,700x latency reduction, from 165 seconds to 35 milliseconds. Both cases employed identical detection methodology despite completely different anti-patterns, languages, and protocols — operating on structural trace properties, not implementation details.',
+          'The OpenTelemetry Astronomy Shop is a polyglot microservices application with services in Go, Python, Java, JavaScript, C++, Rust, and others. It ships with feature flags managed by flagd that can inject controlled anti-patterns. I ran the same N+1 query anti-pattern across three services.',
+          'Experiment 0 (baseline): Go checkout service. This service was already exhibiting a naturally occurring N+1 pattern — the prepOrderItems function iterates over cart items and makes individual GetProduct and Convert calls per item. No injection needed; the anti-pattern was in production code.',
+          'Experiment 1: Python recommendation service with the recommendationServiceNPlusOne feature flag enabled. When active, the service iterates over recommended product IDs and calls GetProduct individually for each one instead of using the batch ListProducts() result. The injection is committed to the public OpenTelemetry demo repository, with custom span attributes for full observability: app.recommendation.mode, app.recommendation.product_count, and app.recommendation.sequential_call_index to tag each loop iteration.',
+          'Experiment 2: Java ad service with the adServiceNPlusOne feature flag enabled. Same logical pattern — iterate over ad results, call GetProduct per item — but running on the JVM with bytecode-injected instrumentation.',
+          'Each experiment ran against the same observability backend. The analyzer queried live span data via OTLP, analyzed trace topology without being told what language the service was written in, and scored confidence using sequential Bayesian inference.',
+        ],
+      },
+      {
+        heading: 'What the Analyzer Saw',
+        paragraphs: [
+          'Go checkout service: PlaceOrder spanning 297ms, with prepareOrderItemsAndShippingQuoteFromCart as the main child, fanning out to GetCart (the "1") followed by repeating pairs of GetProduct and Convert — one pair per cart item. Runtime: compiled Go binary. Instrumentation: manual OTel SDK calls. Bayesian confidence: 99.9%.',
+          'Python recommendation service: ListRecommendations fanning out to get_product_list (the "1") followed by sequential individual GetProduct calls — one per recommended product. Runtime: interpreted CPython. Instrumentation: automatic via opentelemetry-instrument monkey-patching — no developer-written span code. Bayesian confidence: 99.9%.',
+          'Java ad service: GetAds fanning out to getAdsByCategory (the "1") followed by sequential GetProduct spans, each with a nested gRPC child. Runtime: JVM bytecode on HotSpot. Instrumentation: hybrid — javaagent transforms classes at load time, application uses OTel API for some spans. Bayesian confidence: 99.9%.',
+          'Across all three: fan-out formulas match structurally (linear scaling), homogeneity patterns align (repeating same operation), temporality shows consistent sequential execution (10–17μs inter-span gaps), scaling relationships remain linear. Confidence scores are identical at 99.9%. The only differences are runtime type and instrumentation method — implementation details that don\'t affect geometry.',
+        ],
+      },
+      {
+        heading: 'What This Proves',
+        paragraphs: [
+          'Three fundamentally different execution models produced the same trace topology. Go compiled the loop to native machine code with manually written instrumentation. Python interpreted the loop bytecode with an agent that monkey-patched the gRPC library — no developer involvement in span creation. Java JIT-compiled the loop from bytecode with a javaagent transforming classes at load time.',
+          'None of this mattered to the detector. It examined span parent-child relationships, counted fan-out, checked homogeneity, measured sequential timing. It never asked what language the service was written in.',
+          'The N+1 pattern is a property of the algorithm — iterate over a collection, make one call per item. That algorithm produces a characteristic trace shape regardless of how the machine executes it. The shape is the invariant.',
         ],
       },
       {
         heading: 'A Taxonomy of Trace Geometries',
         paragraphs: [
-          'N+1 Query / Chatty API — "Comb" signature: many identical spans branching from one parent, high fan-out scaling linearly with input, sequential homogeneous operations.',
-          'Sync-over-Async — "Lollipop" signature: small cluster of fast operations plus one extended span, moderate fan-out with bimodal duration distribution.',
-          'Retry Storm — "Staircase" signature: sequential calls with increasing gaps, repeated calls to same service with timeout terminal states.',
-          'Circuit Breaker Oscillation — "Sawtooth" signature: periodic alternation between fast-fail and slow-fail, oscillating temporal patterns.',
-          'Connection Pool Exhaustion — "Hourglass" signature: flow constricts at resource bottleneck, progressive degradation from healthy to waiting clusters.',
-          'All geometries are detectable through structural analysis: extract properties, classify against signatures, calculate confidence via Bayesian inference, and act on high-confidence results.',
+          'If anti-patterns have characteristic geometries, we can define a taxonomy — a classification based on structural properties of trace trees. Five signatures emerge from this work. N+1 / Comb is experimentally validated across three languages; the others are based on observed cases and represent the next candidates for multi-language validation.',
+          'N+1 Query / Chatty API — "The Comb": fan-out linear with input cardinality, high homogeneity (repeating operation type), sequential temporality. Status: experimentally validated across Go, Python, Java.',
+          'Sync-over-Async — "The Lollipop": moderate fan-out with one dominant child, extreme bimodal duration distribution (fast cluster plus one extreme outlier). Status: observed in Go + Kafka; cross-language validation pending.',
+          'Retry Storm — "The Staircase": repeated calls to same target, sequential with increasing inter-span gaps, terminal timeout or error. Status: hypothesized; not yet validated experimentally.',
+          'Circuit Breaker Oscillation — "The Sawtooth": periodic alternation between fast-fail and slow-fail duration clusters. Status: hypothesized; not yet validated experimentally.',
+          'Connection Pool Exhaustion — "The Hourglass": bimodal distribution (immediate completion vs. wait-timeout), progressive degradation as healthy cluster shrinks and waiting cluster grows. Status: hypothesized; not yet validated experimentally.',
         ],
       },
       {
-        heading: 'Language-Specific Anti-Patterns: The Strongest Evidence',
+        heading: 'The Lollipop: A Second Observed Case',
         paragraphs: [
-          'Runtime-specific anti-patterns actually strengthen rather than break the geometric framework. .NET SynchronizationContext deadlocks produce a parent blocked on a non-completing child with zero concurrency despite async invocation. Python asyncio deadlocks produce an identical trace shape. Java CompletableFuture blocking produces the same geometry from a different language mechanism.',
-          'This reveals a three-layer separation. Layer 1 (Geometry): universal structural properties — fan-out, temporal patterns, duration distributions. Language-agnostic detection occurs here. Layer 2 (Semantics): language-aware span attributes revealing diagnosis details. Layer 3 (Remediation): implementation-specific code fixes varying by language, but only needed because geometry detection occurred first.',
-          'Even mechanisms unique to a single runtime still produce universally recognizable trace shapes.',
+          'A second detection in the checkout service demonstrates the framework generalizing to a different anti-pattern. PlaceOrder ran for 165,084ms — nearly three minutes. All direct children (prepareOrderItems, ChargePayment, SendConfirmation, EmptyCart) completed in under 50ms. But sendToPostProcessor blocked for 165,000ms waiting for a Kafka acknowledgment.',
+          'The structural properties: moderate fan-out, heterogeneous children, sequential execution, with one extreme outlier accounting for 99.9% of total duration — the lollipop shape. The checkout service was blocking on a Kafka acknowledgment, turning a fire-and-forget operation into a synchronous call that could hold for minutes. Meanwhile payment was charged and confirmation email sent — the user saw a 504 timeout believing their order failed.',
+          'The detection method was identical to the N+1 case: analyze the trace tree\'s structural properties, classify the geometry, identify the pathology. No knowledge of Kafka internals was required — geometry flagged the problem before any code review did. The fix (async fire-and-forget with background acknowledgment handling) produced a 4,700x improvement, from 165 seconds to 35 milliseconds.',
         ],
       },
       {
-        heading: 'The Entropy Connection',
+        heading: 'The Three-Layer Architecture',
         paragraphs: [
-          'Anti-patterns represent code paths passing through unnecessarily many states to achieve outcomes reachable through fewer states. N+1 patterns make N network round trips when one batch call would suffice. Fixing anti-patterns collapses configuration space — fewer calls mean fewer states and fewer failure modes.',
-          'Anti-pattern detection through trace geometry is fundamentally entropy measurement. High fan-out with sequential homogeneous children represents high entropy — many redundant microstates. VALIS functions as a Maxwell\'s Demon for distributed systems: observing microstates (spans), acquiring information (Bayesian inference), and acting to reduce local entropy (code fixes).',
-          'Traces are the only telemetry type that preserves the geometric structure of distributed execution. And geometric structure is where the anti-patterns live. The symptom has a shape that transcends its cause.',
+          'Both case studies reveal a clean separation into three layers that makes the framework both universal and actionable.',
+          'Layer 1 — Geometry (universal): the structural properties of the trace tree — fan-out, temporal pattern, duration distribution, homogeneity. This is where detection happens. Language-agnostic, framework-agnostic, vendor-agnostic.',
+          'Layer 2 — Semantics (language-aware): the span attributes that explain the geometry — code.function, thread.id, runtime.name, rpc.system. OpenTelemetry semantic conventions provide this layer. When the geometric detector flags a pattern, semantic attributes narrow the diagnosis: "this is a Python service, the repeating span is GetProduct, the sequential call index attribute is incrementing — N+1 in a recommendation loop."',
+          'Layer 3 — Remediation (implementation-specific): the actual code fix. The N+1 fix in Go uses errgroup for parallel execution. The same anti-pattern in Java might use CompletableFuture.allOf. The async-blocking fix in Go uses a goroutine. Each language has its own idiom — but the fix is only applied because the geometry was detected, and the geometry was detected without knowing the language.',
+          'This layering means the same detection framework generalizes across every language that emits OpenTelemetry spans, while still producing diagnosis and remediation guidance that\'s specific enough to be actionable.',
+        ],
+      },
+      {
+        heading: 'How the Detection Works',
+        paragraphs: [
+          'The Bayesian Trace Topology Analyzer uses sequential Bayesian inference to classify trace geometries. For each anti-pattern, evidence signals are binary observations about the trace tree\'s structural properties, each with a calibrated true positive rate (TPR) and false positive rate (FPR).',
+          'For N+1 detection, the evidence chain is: repeating child spans, sequential execution, same operation name, linear scaling, and high child count. Starting from a conservative 3% prior (the base rate of N+1 patterns across all traces), five positive evidence signals with TPR=0.8 and FPR=0.1 drive the posterior through: 3% → 19.8% → 66.4% → 94.1% → 99.2% → 99.9%.',
+          'The same engine, the same evidence signals, the same update chain — applied to Go traces, Python traces, and Java traces. Same result every time. Because the geometry is the same every time.',
+        ],
+      },
+      {
+        heading: 'What This Means for Observability',
+        paragraphs: [
+          'One detector covers all languages. You don\'t need a Go N+1 detector, a Python N+1 detector, and a Java N+1 detector. You need one trace topology analyzer that recognizes comb geometry. It works on any service that emits OpenTelemetry spans. A polyglot architecture with eleven languages gets coverage from one classifier.',
+          'Detection is vendor-agnostic. The geometry lives in the data, not the platform. The same analysis works on Dynatrace, Datadog, Jaeger, Tempo, or any backend that stores parent-child span relationships.',
+          'New languages get coverage for free. When someone adds a Rust service or a Kotlin service, the N+1 detector doesn\'t need updating. If the new service has a for loop making individual RPC calls, the trace will have the same comb shape.',
+          'Traces are the only telemetry that preserves execution topology. Metrics don\'t. Logs don\'t. This is why traces are the right foundation for anti-pattern detection — and why the observability industry\'s long argument about "which pillar matters most" misses the point.',
+        ],
+      },
+      {
+        heading: 'What\'s Next',
+        paragraphs: [
+          'I\'ve proven language invariance for the N+1 / Comb pattern. The next experiments will test the other geometries in the taxonomy.',
+          'Retry Storm / Staircase: does the stepping pattern look the same whether retries are implemented with Go\'s for loop, Python\'s tenacity, or Java\'s Spring Retry?',
+          'Sync-over-Async / Lollipop: does blocking on an async operation produce the same dominant-child signature across Go channels, Python asyncio, and Java CompletableFuture? Early evidence from the Kafka fix suggests it does — but that\'s one language and one runtime.',
+          'If the hypothesis continues to hold — and the algorithmic nature of anti-patterns suggests it should — then a single geometric detection framework can classify the full taxonomy across any OpenTelemetry-instrumented architecture. One shape language. Every programming language.',
         ],
       },
     ],
@@ -334,7 +314,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
         paragraphs: [
           'The VALIS nomenclature carries intention. In Dick\'s novel, VALIS perceives information humans cannot detect. Production telemetry similarly contains patterns challenging human cognition at scale.',
           'Decades of systems development focused on recording events. VALIS shifts toward systems understanding what occurs — through transparent statistical methods with calibrated confidence rather than opaque machine learning. Humans remain in the loop as strategic decision-makers rather than pattern-matching machines.',
-          'The imagined fully-automated workflow: Dash0 ingests deployment spans, VALIS detects N+1 query patterns with 87% confidence, VALIS correlates findings with GitHub to identify offending code, AI agent generates batch query fixes, CI runs and tests pass, ArgoCD deploys corrections, VALIS confirms anti-pattern resolution. Each component has been demonstrated functioning independently; integration represents the primary engineering challenge.',
+          'The imagined fully-automated workflow: an OTel-native observability platform ingests deployment spans, VALIS detects N+1 query patterns with 87% confidence, VALIS correlates findings with GitHub to identify offending code, AI agent generates batch query fixes, CI runs and tests pass, ArgoCD deploys corrections, VALIS confirms anti-pattern resolution. Each component has been demonstrated functioning independently; integration represents the primary engineering challenge.',
         ],
       },
     ],
