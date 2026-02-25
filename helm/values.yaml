@@ -25,6 +25,7 @@ frontend:
     repository: o11y-news-frontend
     tag: latest
     pullPolicy: IfNotPresent
+  adminPassword: ""   # Set via ArgoCD helm param --set frontend.adminPassword=... (never commit real value)
   service:
     type: ClusterIP
     port: 3000
