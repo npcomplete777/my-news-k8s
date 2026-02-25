@@ -80,7 +80,7 @@ const expertise = [
 
 export default function AboutPage() {
   return (
-    <div className="flex flex-col gap-10 max-w-3xl">
+    <div className="mx-auto flex flex-col gap-10 max-w-3xl px-4 pt-6 pb-20">
       {/* Hero */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">

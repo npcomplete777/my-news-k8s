@@ -17,16 +17,16 @@ function TraceRow({ trace }: { trace: TraceDTO }) {
       href={`/telemetry/traces/${encodeURIComponent(trace.traceId)}`}
       className={clsx(
         'flex items-start justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm',
-        'transition-colors hover:bg-zinc-800/50',
+        'transition-colors hover:bg-stone-100 dark:hover:bg-zinc-800/50',
         trace.mySession
           ? 'border-amber-800/50 bg-amber-950/20'
-          : 'border-zinc-800 bg-zinc-900/30'
+          : 'border-stone-200 bg-stone-50 dark:border-zinc-800 dark:bg-zinc-900/30'
       )}
     >
       {/* Left: name + trace ID */}
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-zinc-200 truncate">{trace.rootSpanName}</span>
+          <span className="font-medium text-stone-800 dark:text-zinc-200 truncate">{trace.rootSpanName}</span>
           {trace.hasError && (
             <span className="badge bg-red-900/50 text-red-400 shrink-0">ERROR</span>
           )}
@@ -45,7 +45,7 @@ function TraceRow({ trace }: { trace: TraceDTO }) {
 
       {/* Right: duration + time */}
       <div className="shrink-0 text-right text-xs text-zinc-500">
-        <p className={clsx('font-mono font-medium', trace.hasError ? 'text-red-400' : 'text-zinc-300')}>
+        <p className={clsx('font-mono font-medium', trace.hasError ? 'text-red-400' : 'text-stone-700 dark:text-zinc-300')}>
           {formatDuration(trace.durationMs)}
         </p>
         <p className="mt-0.5">{formatDistanceToNow(new Date(trace.startTime), { addSuffix: true })}</p>

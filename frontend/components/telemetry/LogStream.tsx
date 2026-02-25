@@ -80,7 +80,7 @@ export function LogStream({
   }
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2 font-mono">
+    <div className="rounded-lg border border-stone-200 dark:border-zinc-800 bg-zinc-900/50 px-3 py-2 font-mono">
       {logs.map((entry, i) => (
         <LogRow key={`${entry.timestamp}-${i}`} entry={entry} />
       ))}

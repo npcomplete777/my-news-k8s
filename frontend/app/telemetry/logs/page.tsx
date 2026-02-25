@@ -30,15 +30,15 @@ export default function LogsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Time range */}
-        <div className="flex items-center gap-1 rounded-lg border border-zinc-800 p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-stone-200 dark:border-zinc-800 p-0.5">
           {TIME_OPTIONS.map(opt => (
             <button
               key={opt.value}
               onClick={() => setMinutes(opt.value)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 minutes === opt.value
-                  ? 'bg-zinc-700 text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-stone-200 text-stone-800 dark:bg-zinc-700 dark:text-zinc-100'
+                  : 'text-stone-500 hover:text-stone-700 dark:text-zinc-500 dark:hover:text-zinc-300'
               }`}
             >
               {opt.label}
@@ -47,15 +47,15 @@ export default function LogsPage() {
         </div>
 
         {/* Severity filter */}
-        <div className="flex items-center gap-1 rounded-lg border border-zinc-800 p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-stone-200 dark:border-zinc-800 p-0.5">
           {SEVERITIES.map(sev => (
             <button
               key={sev}
               onClick={() => setMinSeverity(sev)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 minSeverity === sev
-                  ? 'bg-zinc-700 text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-stone-200 text-stone-800 dark:bg-zinc-700 dark:text-zinc-100'
+                  : 'text-stone-500 hover:text-stone-700 dark:text-zinc-500 dark:hover:text-zinc-300'
               }`}
             >
               {SEVERITY_LABELS[sev]}

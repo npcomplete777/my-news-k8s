@@ -20,7 +20,7 @@ function MetricCard({
     ok: 'text-emerald-400',
     warn: 'text-amber-400',
     error: 'text-red-400',
-    neutral: 'text-zinc-100',
+    neutral: 'text-stone-900 dark:text-zinc-100',
   };
 
   return (

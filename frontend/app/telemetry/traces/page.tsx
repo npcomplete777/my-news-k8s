@@ -22,15 +22,15 @@ export default function TracesPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Time range */}
-        <div className="flex items-center gap-1 rounded-lg border border-zinc-800 p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-stone-200 dark:border-zinc-800 p-0.5">
           {TIME_OPTIONS.map(opt => (
             <button
               key={opt.value}
               onClick={() => setMinutes(opt.value)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 minutes === opt.value
-                  ? 'bg-zinc-700 text-zinc-100'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-stone-200 text-stone-800 dark:bg-zinc-700 dark:text-zinc-100'
+                  : 'text-stone-500 hover:text-stone-700 dark:text-zinc-500 dark:hover:text-zinc-300'
               }`}
             >
               {opt.label}
@@ -39,12 +39,12 @@ export default function TracesPage() {
         </div>
 
         {/* Error filter */}
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-500 dark:text-zinc-400">
           <input
             type="checkbox"
             checked={errorOnly}
             onChange={e => setErrorOnly(e.target.checked)}
-            className="rounded border-zinc-600 bg-zinc-800 text-amber-500 focus:ring-amber-500"
+            className="rounded border-stone-300 bg-stone-100 dark:border-zinc-600 dark:bg-zinc-800 text-amber-500 focus:ring-amber-500"
           />
           Errors only
         </label>

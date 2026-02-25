@@ -19,7 +19,7 @@ export function PrivacyNotice() {
         </button>
       </div>
       {expanded && (
-        <ul className="mt-2 space-y-1 text-xs text-zinc-400 list-none">
+        <ul className="mt-2 space-y-1 text-xs text-stone-500 dark:text-zinc-400 list-none">
           <li>• IP addresses, user agents, and cookies are stripped server-side.</li>
           <li>• Traces show HTTP method, URL path, latency, and status only — no request bodies.</li>
           <li>• Your browser session ID highlights your own requests in the trace list.</li>

@@ -45,7 +45,7 @@ export function LoadGenerator() {
 
   return (
     <div className="card">
-      <h3 className="text-sm font-semibold text-zinc-300 mb-3">Generate Demo Traffic</h3>
+      <h3 className="text-sm font-semibold text-stone-700 dark:text-zinc-300 mb-3">Generate Demo Traffic</h3>
       <div className="flex flex-wrap gap-2 mb-3">
         {(['feed', 'search', 'bookmarks', 'burst'] as const).map(p => (
           <button
