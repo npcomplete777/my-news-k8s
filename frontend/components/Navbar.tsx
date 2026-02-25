@@ -8,8 +8,8 @@ import { useTheme } from '@/components/ThemeProvider';
 const navLinks = [
   { href: '/feed', label: 'Feed' },
   { href: '/telemetry', label: 'Telemetry' },
+  { href: '/ai', label: 'AI' },
   { href: '/about', label: 'About' },
-  { href: '/bookmarks', label: 'Bookmarks' },
 ];
 
 export function Navbar() {
