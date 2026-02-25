@@ -6,7 +6,7 @@ backend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-backend
-    tag: 27eaed9
+    tag: 97604c7
     pullPolicy: Always
   env:
     SPRING_PROFILES_ACTIVE: kubernetes
@@ -74,7 +74,7 @@ localOtel:
     image: "clickhouse/clickhouse-server:24.8-alpine"
     storage:
       size: 20Gi
-      storageClassName: standard-rwo  # GKE standard persistent disk (RWO)
+      storageClassName: standard-rwo # GKE standard persistent disk (RWO)
     resources:
       requests:
         cpu: 200m
