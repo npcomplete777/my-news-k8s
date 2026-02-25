@@ -8,7 +8,8 @@ import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import type { Context } from '@opentelemetry/api';
+import { trace } from '@opentelemetry/api';
+import type { Context, Span } from '@opentelemetry/api';
 
 export interface BrowserSpan {
   name: string;
@@ -69,10 +70,23 @@ export function initBrowserOtel(): void {
   const provider = new WebTracerProvider({
     resource: new Resource({
       [ATTR_SERVICE_NAME]: 'o11y-news-browser',
+      // User identity / environment attributes — stored in ClickHouse on every span
+      'browser.user_agent': navigator.userAgent,
+      'browser.language': navigator.language,
+      'browser.languages': navigator.languages.join(','),
+      'browser.screen_width': screen.width,
+      'browser.screen_height': screen.height,
+      'browser.color_depth': screen.colorDepth,
+      'browser.device_pixel_ratio': window.devicePixelRatio,
+      'browser.timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
+      'browser.platform': navigator.platform,
+      'browser.online': navigator.onLine,
+      'page.referrer': document.referrer,
+      'page.origin': window.location.origin,
     }),
   });
 
-  // In-memory: immediately feeds React state for the Browser tab
+  // In-memory: feeds React state for the Browser tab
   provider.addSpanProcessor(new NotifyingSpanProcessor());
 
   // Batch export to OTel collector via Next.js same-origin proxy
@@ -87,8 +101,57 @@ export function initBrowserOtel(): void {
       new DocumentLoadInstrumentation(),
       new FetchInstrumentation({
         propagateTraceHeaderCorsUrls: [/.*/],
-        ignoreUrls: [/\/api\/otel\//], // avoid self-tracing the OTLP export requests
+        ignoreUrls: [/\/api\/otel\//],
       }),
     ],
+  });
+
+  // Track page view duration: one span per page visit, ends when tab hides or page unloads
+  trackPageViews(provider);
+}
+
+function trackPageViews(provider: WebTracerProvider): void {
+  const tracer = trace.getTracer('o11y-news-browser');
+  let pageSpan: Span | null = null;
+
+  function startPageSpan() {
+    pageSpan = tracer.startSpan('page.view', {
+      attributes: {
+        'page.url': window.location.href,
+        'page.path': window.location.pathname,
+        'page.search': window.location.search,
+        'page.hash': window.location.hash,
+        'page.title': document.title,
+        'page.referrer': document.referrer,
+        'viewport.width': window.innerWidth,
+        'viewport.height': window.innerHeight,
+      },
+    });
+  }
+
+  function endPageSpan() {
+    if (pageSpan) {
+      pageSpan.end();
+      pageSpan = null;
+    }
+  }
+
+  startPageSpan();
+
+  // visibilitychange is the most reliable signal for tab hide/close/switch
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      endPageSpan();
+      // Flush so spans export before the browser suspends the page
+      provider.forceFlush().catch(() => {});
+    } else if (document.visibilityState === 'visible') {
+      startPageSpan();
+    }
+  });
+
+  // pagehide fires on mobile and bfcache navigation where visibilitychange may not
+  window.addEventListener('pagehide', () => {
+    endPageSpan();
+    provider.forceFlush().catch(() => {});
   });
 }
