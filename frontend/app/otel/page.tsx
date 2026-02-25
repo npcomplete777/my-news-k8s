@@ -2,10 +2,18 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'OTel — O11y Alchemy',
-  description: 'Custom OpenTelemetry Collector receivers for first-party data sources — Airflow, Databricks, Snowflake, CockroachDB.',
+  description: 'Custom OpenTelemetry Collector receivers — Airflow, Databricks, Snowflake, CockroachDB, and UniFi network infrastructure.',
 };
 
 const OTEL_RECEIVERS = [
+  {
+    name: 'UniFi Receiver',
+    icon: '📡',
+    description:
+      'VAP-level metrics per access point, SSID, and radio band — scraped from the UniFi Dream Machine API every 30 seconds. Covers tx/rx throughput, packet error and drop rates, connected client counts, CCQ and satisfaction scores, average RSSI, switch port rates, UDM temperature, and WAN latency/availability. Running in production on a Raspberry Pi 5 k3s cluster.',
+    href: 'https://github.com/npcomplete777/unifireceiver',
+    tags: ['UniFi', 'WiFi', 'Network', 'Dream Machine'],
+  },
   {
     name: 'Airflow Receiver',
     icon: '🌊',
@@ -92,8 +100,8 @@ export default function OtelPage() {
             OTEL
           </h1>
           <p className="max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-zinc-400 sm:text-base">
-            Custom OpenTelemetry Collector receivers for first-party data sources that lack native
-            OTel support. Drop these into any collector pipeline to bring Airflow, Databricks,
+            Custom OpenTelemetry Collector receivers for first-party data sources. Drop these into
+            any collector pipeline to bring UniFi network infrastructure, Airflow, Databricks,
             Snowflake, and CockroachDB metrics alongside your application traces and logs.
           </p>
         </div>
@@ -136,7 +144,7 @@ export default function OtelPage() {
               Available Receivers
             </p>
             <p className="text-xs text-stone-400 dark:text-zinc-600">
-              4 receivers · Plug-in to any OTel Collector pipeline · Written in Go
+              5 receivers · Plug-in to any OTel Collector pipeline · Written in Go
             </p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

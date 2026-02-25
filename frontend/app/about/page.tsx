@@ -37,16 +37,17 @@ const projects = [
     description:
       'Model Context Protocol server for querying Dash0 telemetry from AI assistants. ' +
       'Enables natural-language access to traces, metrics, and logs stored in Dash0.',
-    url: 'https://github.com/npcomplete777',
-    tags: ['MCP', 'AI Agents', 'Dash0', 'TypeScript'],
+    url: 'https://github.com/npcomplete777/Dash0-mcp',
+    tags: ['MCP', 'AI Agents', 'Dash0', 'Go'],
   },
   {
-    name: 'OTel Receiver Factory',
+    name: 'Custom OTel Receivers',
     description:
-      'Utility for composing OpenTelemetry collector receiver pipelines programmatically. ' +
-      'Simplifies building custom receivers for non-standard telemetry sources.',
-    url: 'https://github.com/npcomplete777',
-    tags: ['OpenTelemetry', 'Go', 'Collector'],
+      'Five custom OpenTelemetry Collector receivers written in Go: UniFi network infrastructure, ' +
+      'Apache Airflow, Databricks, Snowflake, and CockroachDB. Each surfaces first-party ' +
+      'operational metrics as OTLP-native signals inside any collector pipeline.',
+    url: 'https://github.com/npcomplete777/unifireceiver',
+    tags: ['OpenTelemetry', 'Go', 'Collector', 'UniFi'],
   },
 ];
 
