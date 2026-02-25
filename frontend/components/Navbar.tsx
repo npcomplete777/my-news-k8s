@@ -76,7 +76,7 @@ export function Navbar() {
           </button>
 
           <a
-            href="https://github.com/npcomplete777/valis-mcp"
+            href="https://github.com/npcomplete777/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-stone-400 hover:text-stone-900 dark:text-zinc-500 dark:hover:text-zinc-100 transition-colors"
