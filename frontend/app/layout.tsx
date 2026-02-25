@@ -3,6 +3,7 @@ import { Barlow_Condensed } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { OTelProvider } from '@/components/OTelProvider';
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ['latin'],
@@ -29,8 +30,10 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased bg-white dark:bg-zinc-950 text-stone-900 dark:text-zinc-100">
         <ThemeProvider>
-          <Navbar />
-          <main>{children}</main>
+          <OTelProvider>
+            <Navbar />
+            <main>{children}</main>
+          </OTelProvider>
         </ThemeProvider>
       </body>
     </html>

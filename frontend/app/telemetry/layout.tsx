@@ -10,6 +10,7 @@ const tabs = [
   { href: '/telemetry/traces', label: 'Traces' },
   { href: '/telemetry/metrics', label: 'Metrics' },
   { href: '/telemetry/logs', label: 'Logs' },
+  { href: '/telemetry/browser', label: 'Browser' },
 ];
 
 export default function TelemetryLayout({ children }: { children: React.ReactNode }) {
