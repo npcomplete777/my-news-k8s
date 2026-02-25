@@ -37,6 +37,8 @@ spec:
           env:
             - name: CLICKHOUSE_DB
               value: otel
+            - name: CLICKHOUSE_USER
+              value: default
             {{- if .Values.localOtel.clickhouse.auth.password }}
             - name: CLICKHOUSE_PASSWORD
               value: {{ .Values.localOtel.clickhouse.auth.password | quote }}
