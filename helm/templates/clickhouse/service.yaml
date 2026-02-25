@@ -1,19 +1,22 @@
-{{- if and .Values.localOtel.enabled .Values.localOtel.prometheus.enabled }}
+{{- if .Values.localOtel.clickhouse.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus
+  name: clickhouse
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "o11y-news.labels" . | nindent 4 }}
-    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/component: clickhouse
 spec:
   type: ClusterIP
   selector:
     {{- include "o11y-news.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/component: clickhouse
   ports:
     - name: http
-      port: 9090
+      port: 8123
       targetPort: http
+    - name: native
+      port: 9000
+      targetPort: native
 {{- end }}

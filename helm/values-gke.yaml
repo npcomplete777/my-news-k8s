@@ -69,24 +69,25 @@ localOtel:
       limits:
         cpu: 100m
         memory: 128Mi
+  clickhouse:
+    enabled: true
+    image: "clickhouse/clickhouse-server:24.8-alpine"
+    storage:
+      size: 20Gi
+      storageClassName: standard-rwo  # GKE standard persistent disk (RWO)
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+    auth:
+      password: ""
   jaeger:
-    image: "jaegertracing/all-in-one:latest"
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: 150m
-        memory: 256Mi
+    enabled: false
   prometheus:
-    image: "prom/prometheus:v3.1.0"
-    resources:
-      requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
-        cpu: 150m
-        memory: 256Mi
+    enabled: false
 dash0:
   enabled: false # free trial expired — all Dash0 exporters disabled (templates preserved)
   authToken: "" # injected via ArgoCD helm param (not in git)

@@ -94,7 +94,25 @@ localOtel:
       limits:
         cpu: 200m
         memory: 128Mi
+  clickhouse:
+    enabled: true
+    image: "clickhouse/clickhouse-server:24.8-alpine"
+    storage:
+      size: 20Gi
+      storageClassName: standard
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "2"
+        memory: 2Gi
+    auth:
+      password: ""  # no password for cluster-internal use; override per environment
+  # Jaeger and Prometheus are disabled in favour of ClickHouse.
+  # Set enabled: true to re-enable for local debugging.
   jaeger:
+    enabled: false
     image: "jaegertracing/all-in-one:latest"
     resources:
       requests:
@@ -104,6 +122,7 @@ localOtel:
         cpu: 200m
         memory: 256Mi
   prometheus:
+    enabled: false
     image: "prom/prometheus:v3.1.0"
     resources:
       requests:

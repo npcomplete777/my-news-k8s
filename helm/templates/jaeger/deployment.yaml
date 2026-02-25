@@ -1,4 +1,4 @@
-{{- if .Values.localOtel.enabled }}
+{{- if and .Values.localOtel.enabled .Values.localOtel.jaeger.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

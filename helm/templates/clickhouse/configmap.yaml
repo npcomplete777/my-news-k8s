@@ -1,0 +1,15 @@
+{{- if .Values.localOtel.clickhouse.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "o11y-news.fullname" . }}-clickhouse-init
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "o11y-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+data:
+  # The OTel Collector exporter (create_schema: true) creates all tables automatically.
+  # This script just ensures the database exists before the collector connects.
+  init-otel.sql: |
+    CREATE DATABASE IF NOT EXISTS otel;
+{{- end }}

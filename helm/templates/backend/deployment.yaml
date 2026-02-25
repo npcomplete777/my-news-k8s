@@ -56,9 +56,14 @@ spec:
             # Clear Dash0 LD_PRELOAD so only our otel-agent javaagent runs
             - name: LD_PRELOAD
               value: ""
-            # Clear Dash0 API token so TelemetryService uses LocalTelemetryClient (Jaeger+Prometheus)
+            # Clear Dash0 API token so TelemetryService routes to the local backend
             - name: DASH0_API_TOKEN
               value: ""
+            {{- if .Values.localOtel.clickhouse.enabled }}
+            # ClickHouse HTTP endpoint — TelemetryService uses this instead of Jaeger+Prometheus
+            - name: LOCAL_OTEL_CLICKHOUSE_URL
+              value: "http://clickhouse:8123"
+            {{- end }}
             {{- end }}
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://{{ include "o11y-news.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/{{ .Values.postgres.auth.database }}"

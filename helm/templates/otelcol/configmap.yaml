@@ -26,15 +26,22 @@ data:
         timeout: 5s
 
     exporters:
-      otlp/jaeger:
-        endpoint: "jaeger:4317"
-        tls:
-          insecure: true
-
-      prometheus:
-        endpoint: "0.0.0.0:8889"
-        resource_to_telemetry_conversion:
+      clickhouse:
+        endpoint: tcp://clickhouse:9000
+        database: otel
+        ttl: 72h
+        create_schema: true
+        compress: lz4
+        timeout: 10s
+        retry_on_failure:
           enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+        sending_queue:
+          enabled: true
+          num_consumers: 2
+          queue_size: 100
 
       debug:
         verbosity: basic
@@ -45,13 +52,13 @@ data:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [otlp/jaeger]
+          exporters: [clickhouse]
         metrics:
           receivers: [otlp]
           processors: [batch]
-          exporters: [prometheus]
+          exporters: [clickhouse]
         logs:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug]
+          exporters: [clickhouse, debug]
 {{- end }}

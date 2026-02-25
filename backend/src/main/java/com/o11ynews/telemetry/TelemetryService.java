@@ -14,13 +14,16 @@ import java.util.stream.Collectors;
 
 /**
  * Business logic for the Telemetry API.
- * Queries the Dash0ApiClient, transforms raw spans/logs into frontend DTOs,
- * applies PII redaction, and flags traces belonging to the current browser session.
+ *
+ * Backend selection priority (highest to lowest):
+ *   1. ClickHouse  — when LOCAL_OTEL_CLICKHOUSE_URL is set (local stack with ClickHouse)
+ *   2. Dash0       — when DASH0_API_TOKEN is non-blank (cloud SaaS)
+ *   3. Local       — Jaeger (traces) + Prometheus (metrics), legacy local stack
  */
 @Service
 public class TelemetryService {
 
-    // PromQL queries (service_name label uses underscore per OTel Prometheus bridge convention)
+    // PromQL queries used by the Jaeger+Prometheus / Dash0 backends
     private static final String SERVICE = "o11y-news";
     private static final String PROM_REQUEST_RATE =
             "sum(rate(http_server_request_duration_seconds_count{service_name=\"" + SERVICE + "\"}[5m]))";
@@ -42,57 +45,62 @@ public class TelemetryService {
 
     private final Dash0ApiClient dash0ApiClient;
     private final LocalTelemetryClient localClient;
+    private final ClickHouseTelemetryClient clickHouseClient;
     private final PiiRedactionService piiRedactionService;
     private final SessionCorrelationService sessionCorrelationService;
     private final Dash0Properties properties;
 
     public TelemetryService(Dash0ApiClient dash0ApiClient,
                             LocalTelemetryClient localClient,
+                            ClickHouseTelemetryClient clickHouseClient,
                             PiiRedactionService piiRedactionService,
                             SessionCorrelationService sessionCorrelationService,
                             Dash0Properties properties) {
-        this.dash0ApiClient = dash0ApiClient;
-        this.localClient = localClient;
-        this.piiRedactionService = piiRedactionService;
+        this.dash0ApiClient            = dash0ApiClient;
+        this.localClient               = localClient;
+        this.clickHouseClient          = clickHouseClient;
+        this.piiRedactionService       = piiRedactionService;
         this.sessionCorrelationService = sessionCorrelationService;
-        this.properties = properties;
+        this.properties                = properties;
     }
 
+    /** ClickHouse takes priority over both Dash0 and legacy local (Jaeger+Prometheus). */
+    private boolean useClickHouse() {
+        return clickHouseClient.isEnabled();
+    }
+
+    /** Legacy Jaeger+Prometheus path — only when no ClickHouse and no Dash0 token. */
     private boolean useLocal() {
-        return properties.getApi().getAuthToken().isBlank();
+        return !useClickHouse() && properties.getApi().getAuthToken().isBlank();
     }
 
     // -------------------------------------------------------------------------
     // Traces
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns recent traces (grouped from spans), sorted newest-first.
-     * Traces belonging to the current browser session are flagged with isCurrentSession=true.
-     */
     @WithSpan
     public List<TraceDTO> getRecentTraces(String sessionId, int timeRangeMinutes) {
-        int limit = properties.getTelemetry().getMaxTraces() * 4; // fetch more spans than traces needed
-        List<Dash0Span> spans = useLocal()
-                ? localClient.querySpans(timeRangeMinutes, false, limit)
-                : dash0ApiClient.querySpans(timeRangeMinutes, false, limit);
+        int limit = properties.getTelemetry().getMaxTraces() * 4;
+        List<Dash0Span> spans = useClickHouse()
+                ? clickHouseClient.querySpans(timeRangeMinutes, false, limit)
+                : useLocal()
+                        ? localClient.querySpans(timeRangeMinutes, false, limit)
+                        : dash0ApiClient.querySpans(timeRangeMinutes, false, limit);
         return buildTraceDTOs(spans, sessionId);
     }
 
-    /**
-     * Returns recent error-only traces.
-     */
     @WithSpan
     public List<TraceDTO> getRecentErrorTraces(String sessionId, int timeRangeMinutes) {
         int limit = properties.getTelemetry().getMaxTraces() * 4;
-        List<Dash0Span> spans = useLocal()
-                ? localClient.querySpans(timeRangeMinutes, true, limit)
-                : dash0ApiClient.querySpans(timeRangeMinutes, true, limit);
+        List<Dash0Span> spans = useClickHouse()
+                ? clickHouseClient.querySpans(timeRangeMinutes, true, limit)
+                : useLocal()
+                        ? localClient.querySpans(timeRangeMinutes, true, limit)
+                        : dash0ApiClient.querySpans(timeRangeMinutes, true, limit);
         return buildTraceDTOs(spans, sessionId);
     }
 
     private List<TraceDTO> buildTraceDTOs(List<Dash0Span> spans, String sessionId) {
-        // Group spans by traceId
         Map<String, List<Dash0Span>> byTrace = spans.stream()
                 .filter(s -> s.traceId() != null)
                 .collect(Collectors.groupingBy(Dash0Span::traceId));
@@ -105,7 +113,6 @@ public class TelemetryService {
     }
 
     private TraceDTO buildTraceDTO(List<Dash0Span> traceSpans, String sessionId) {
-        // Root span: no parentSpanId or the one with the earliest start time
         Dash0Span root = traceSpans.stream()
                 .filter(s -> s.parentSpanId() == null || s.parentSpanId().isBlank())
                 .findFirst()
@@ -113,11 +120,9 @@ public class TelemetryService {
                         .min(Comparator.comparing(s -> s.startTimeUnixNano() != null ? s.startTimeUnixNano() : 0L))
                         .orElse(traceSpans.getFirst()));
 
-        // Aggregate error status: if any span has ERROR, the trace is ERROR
         boolean hasError = traceSpans.stream()
                 .anyMatch(s -> "ERROR".equalsIgnoreCase(s.statusCode()));
 
-        // Total trace duration: from earliest start to latest end
         long minNano = traceSpans.stream()
                 .mapToLong(s -> s.startTimeUnixNano() != null ? s.startTimeUnixNano() : 0L)
                 .min().orElse(0L);
@@ -125,7 +130,6 @@ public class TelemetryService {
                 .mapToLong(Dash0Span::durationMsSafe)
                 .max().orElse(0L);
 
-        // Check if this trace belongs to the current browser session
         boolean isCurrentSession = sessionId != null && traceSpans.stream()
                 .anyMatch(s -> s.attributes() != null
                         && sessionCorrelationService.isCurrentSession(
@@ -143,15 +147,14 @@ public class TelemetryService {
         );
     }
 
-    /**
-     * Returns span details for a single trace (all spans with the given traceId).
-     * PII attributes are redacted.
-     */
     @WithSpan
     public List<SpanDTO> getTraceSpans(String traceId, int timeRangeMinutes) {
-        List<Dash0Span> spans = useLocal()
-                ? localClient.querySpans(timeRangeMinutes, false, properties.getTelemetry().getMaxTraces() * 8)
-                : dash0ApiClient.querySpans(timeRangeMinutes, false, properties.getTelemetry().getMaxTraces() * 8);
+        int limit = properties.getTelemetry().getMaxTraces() * 8;
+        List<Dash0Span> spans = useClickHouse()
+                ? clickHouseClient.querySpans(timeRangeMinutes, false, limit)
+                : useLocal()
+                        ? localClient.querySpans(timeRangeMinutes, false, limit)
+                        : dash0ApiClient.querySpans(timeRangeMinutes, false, limit);
         return spans.stream()
                 .filter(s -> traceId.equals(s.traceId()))
                 .map(this::toSpanDTO)
@@ -179,11 +182,42 @@ public class TelemetryService {
     // Metrics
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns a live metrics snapshot from PromQL queries against Dash0.
-     */
     @WithSpan
     public MetricsSummaryDTO getMetricsSummary() {
+        if (useClickHouse()) {
+            return getMetricsSummaryFromClickHouse();
+        }
+        return getMetricsSummaryFromPromQL();
+    }
+
+    /**
+     * Derives RED metrics from otel_traces (request rate, error rate, latency)
+     * and infra metrics from otel_metrics_* tables (JVM heap, DB connections,
+     * circuit breakers). Falls back gracefully to 0 when tables are empty.
+     */
+    private MetricsSummaryDTO getMetricsSummaryFromClickHouse() {
+        double requestRate         = clickHouseClient.getRequestRate();
+        double errorRate           = clickHouseClient.getErrorRate();
+        double[] latency           = clickHouseClient.getLatencyPercentiles();
+        double heapMb              = clickHouseClient.getJvmHeapMb();
+        long activeDb              = clickHouseClient.getActiveDbConnections();
+        Map<String, String> pollerStatuses = clickHouseClient.getCircuitBreakerStates();
+
+        return new MetricsSummaryDTO(
+                requestRate,
+                latency[0],
+                latency[1],
+                latency[2],
+                Double.isNaN(errorRate) ? 0.0 : errorRate,
+                pollerStatuses,
+                heapMb,
+                activeDb,
+                Instant.now()
+        );
+    }
+
+    /** Original PromQL path — used for Dash0 cloud and legacy Jaeger+Prometheus. */
+    private MetricsSummaryDTO getMetricsSummaryFromPromQL() {
         double requestRate = metric(PROM_REQUEST_RATE);
         double errorRate   = metric(PROM_ERROR_RATE);
         double p50         = metric(PROM_LATENCY_P50);
@@ -191,7 +225,6 @@ public class TelemetryService {
         double p99         = metric(PROM_LATENCY_P99);
         double heapMb      = metric(PROM_JVM_HEAP);
         long activeDb      = (long) metric(PROM_DB_CONNECTIONS);
-
         Map<String, String> pollerStatuses = resolvePollerStatuses();
 
         return new MetricsSummaryDTO(
@@ -207,10 +240,6 @@ public class TelemetryService {
         );
     }
 
-    /**
-     * Resolves each resilience4j circuit breaker's current state by finding the
-     * state gauge with value=1 across all circuit breaker series.
-     */
     private double metric(String promQuery) {
         return useLocal()
                 ? localClient.queryInstantMetric(promQuery).orElse(0.0)
@@ -226,22 +255,18 @@ public class TelemetryService {
         for (PrometheusResult result : results) {
             Map<String, String> labels = result.metric();
             if (labels == null) continue;
-
             String name  = labels.get("name");
             String state = labels.get("state");
             if (name == null || state == null) continue;
 
-            // The gauge is 1 for the currently active state, 0 for others
             double value = 0.0;
             if (result.value() != null && result.value().size() >= 2) {
                 try { value = Double.parseDouble(result.value().get(1).toString()); }
                 catch (NumberFormatException ignored) {}
             }
-
             if (value == 1.0) {
                 statuses.put(name, state.toUpperCase());
             } else {
-                // Ensure the poller appears in the map even if only 0-value entries seen so far
                 statuses.putIfAbsent(name, "UNKNOWN");
             }
         }
@@ -252,15 +277,14 @@ public class TelemetryService {
     // Logs
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns recent structured log entries with PII attributes redacted.
-     */
     @WithSpan
     public List<LogEntryDTO> getRecentLogs(int timeRangeMinutes, String minSeverity) {
         int limit = properties.getTelemetry().getMaxLogs();
-        List<Dash0Log> logs = useLocal()
-                ? localClient.queryLogs(timeRangeMinutes, minSeverity, limit)
-                : dash0ApiClient.queryLogs(timeRangeMinutes, minSeverity, limit);
+        List<Dash0Log> logs = useClickHouse()
+                ? clickHouseClient.queryLogs(timeRangeMinutes, minSeverity, limit)
+                : useLocal()
+                        ? localClient.queryLogs(timeRangeMinutes, minSeverity, limit)
+                        : dash0ApiClient.queryLogs(timeRangeMinutes, minSeverity, limit);
         return logs.stream()
                 .map(this::toLogEntryDTO)
                 .sorted(Comparator.comparing(LogEntryDTO::timestamp).reversed())
@@ -293,26 +317,17 @@ public class TelemetryService {
     // Service Map
     // -------------------------------------------------------------------------
 
-    /**
-     * Derives a service topology graph from recent span data.
-     *
-     * Nodes:
-     *   - Always includes "o11y-news" (the backend)
-     *   - CLIENT/PRODUCER spans with db.system attribute → database nodes
-     *   - CLIENT spans with http.url/server.address → external API nodes
-     *
-     * Edges: one per (source, target) pair, with aggregated request count and error fraction.
-     */
     @WithSpan
     public ServiceMapDTO getServiceMap() {
-        List<Dash0Span> spans = useLocal()
-                ? localClient.querySpans(15, false, properties.getTelemetry().getMaxTraces() * 8)
-                : dash0ApiClient.querySpans(15, false, properties.getTelemetry().getMaxTraces() * 8);
+        int limit = properties.getTelemetry().getMaxTraces() * 8;
+        List<Dash0Span> spans = useClickHouse()
+                ? clickHouseClient.querySpans(15, false, limit)
+                : useLocal()
+                        ? localClient.querySpans(15, false, limit)
+                        : dash0ApiClient.querySpans(15, false, limit);
 
         Map<String, ServiceNode> nodes = new LinkedHashMap<>();
         nodes.put(SERVICE, new ServiceNode(SERVICE, "o11y-news (backend)", "backend"));
-
-        // edge key → [total, errors]
         Map<String, long[]> edgeCounts = new LinkedHashMap<>();
 
         for (Dash0Span span : spans) {
@@ -329,17 +344,14 @@ public class TelemetryService {
             String edgeKey = SERVICE + "->" + target;
             edgeCounts.computeIfAbsent(edgeKey, k -> new long[]{0, 0});
             edgeCounts.get(edgeKey)[0]++;
-            if ("ERROR".equalsIgnoreCase(span.statusCode())) {
-                edgeCounts.get(edgeKey)[1]++;
-            }
+            if ("ERROR".equalsIgnoreCase(span.statusCode())) edgeCounts.get(edgeKey)[1]++;
         }
 
-        // Convert edge counts to rates (assuming 15m window)
         double windowMinutes = 15.0;
         List<ServiceEdge> edges = edgeCounts.entrySet().stream()
                 .map(e -> {
-                    long[] counts = e.getValue();
-                    double rpm = counts[0] / windowMinutes;
+                    long[] counts  = e.getValue();
+                    double rpm     = counts[0] / windowMinutes;
                     double errRate = counts[0] > 0 ? (double) counts[1] / counts[0] : 0.0;
                     String[] parts = e.getKey().split("->");
                     return new ServiceEdge(parts[0], parts[1], rpm, errRate);
@@ -350,22 +362,14 @@ public class TelemetryService {
     }
 
     private String resolveTarget(Map<String, Object> attrs) {
-        // Database spans
         if (attrs.containsKey("db.system")) {
             Object dbSystem = attrs.get("db.system");
-            Object dbName = attrs.get("db.name");
+            Object dbName   = attrs.get("db.name");
             return dbName != null ? dbSystem + ":" + dbName : dbSystem.toString();
         }
-        // HTTP client spans — use peer.service if available, otherwise server.address
-        if (attrs.containsKey("peer.service")) {
-            return attrs.get("peer.service").toString();
-        }
-        if (attrs.containsKey("server.address")) {
-            return attrs.get("server.address").toString();
-        }
-        if (attrs.containsKey("http.host")) {
-            return attrs.get("http.host").toString();
-        }
+        if (attrs.containsKey("peer.service"))  return attrs.get("peer.service").toString();
+        if (attrs.containsKey("server.address")) return attrs.get("server.address").toString();
+        if (attrs.containsKey("http.host"))      return attrs.get("http.host").toString();
         return null;
     }
 }

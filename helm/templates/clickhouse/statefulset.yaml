@@ -1,0 +1,78 @@
+{{- if .Values.localOtel.clickhouse.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "o11y-news.fullname" . }}-clickhouse
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "o11y-news.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  serviceName: clickhouse
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "o11y-news.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: clickhouse
+  template:
+    metadata:
+      labels:
+        {{- include "o11y-news.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: clickhouse
+    spec:
+      securityContext:
+        # ClickHouse runs as root by default; restrict fsGroup for volume ownership
+        fsGroup: 101
+      containers:
+        - name: clickhouse
+          image: {{ .Values.localOtel.clickhouse.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8123
+              protocol: TCP
+            - name: native
+              containerPort: 9000
+              protocol: TCP
+          env:
+            - name: CLICKHOUSE_DB
+              value: otel
+            {{- if .Values.localOtel.clickhouse.auth.password }}
+            - name: CLICKHOUSE_PASSWORD
+              value: {{ .Values.localOtel.clickhouse.auth.password | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+            - name: init-db
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            {{- toYaml .Values.localOtel.clickhouse.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+      volumes:
+        - name: init-db
+          configMap:
+            name: {{ include "o11y-news.fullname" . }}-clickhouse-init
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.localOtel.clickhouse.storage.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.localOtel.clickhouse.storage.size }}
+{{- end }}
