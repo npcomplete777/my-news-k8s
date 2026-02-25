@@ -30,6 +30,20 @@ spec:
       {{- end }}
       http:
         paths:
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+          - path: /api/otel
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
           - path: /api
             pathType: Prefix
             backend:
@@ -47,6 +61,20 @@ spec:
     - host: www.{{ .Values.ingress.host }}
       http:
         paths:
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+          - path: /api/otel
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
           - path: /
             pathType: Prefix
             backend:
