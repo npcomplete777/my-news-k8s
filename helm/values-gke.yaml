@@ -23,7 +23,7 @@ frontend:
   replicas: 1
   image:
     repository: ghcr.io/npcomplete777/o11y-news-frontend
-    tag: 325187d
+    tag: c422645
     pullPolicy: Always
   resources:
     requests:
