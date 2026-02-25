@@ -10,6 +10,7 @@ const navLinks = [
   { href: '/telemetry', label: 'Telemetry' },
   { href: '/ai', label: 'AI' },
   { href: '/otel', label: 'OTel' },
+  { href: '/clickhouse', label: 'ClickHouse' },
   { href: '/architecture', label: 'Architecture' },
   { href: '/about', label: 'About' },
 ];

@@ -29,8 +29,10 @@ data:
       clickhouse:
         endpoint: tcp://clickhouse:9000
         database: otel
-        ttl: 72h
-        create_schema: true
+        create_schema: false
+        traces_table_name: traces_raw
+        logs_table_name: logs_raw
+        metrics_gauge_table_name: metrics_gauge_raw
         compress: lz4
         timeout: 10s
         retry_on_failure:
@@ -40,8 +42,11 @@ data:
           max_elapsed_time: 300s
         sending_queue:
           enabled: true
-          num_consumers: 2
-          queue_size: 100
+          num_consumers: 4
+          queue_size: 500
+        batch:
+          timeout: 5s
+          send_batch_size: 10000
 
       debug:
         verbosity: basic

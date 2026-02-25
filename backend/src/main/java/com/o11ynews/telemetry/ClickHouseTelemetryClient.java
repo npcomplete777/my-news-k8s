@@ -18,8 +18,11 @@ import java.util.*;
 /**
  * Telemetry backend that reads directly from the in-cluster ClickHouse instance.
  *
- * Data is written by the OTel Collector's clickhouse exporter using the standard
- * OTel community schema (otel_traces, otel_logs, otel_metrics_gauge, etc.).
+ * Data is written by the OTel Collector via a Null-engine ingest table (traces_raw,
+ * logs_raw, metrics_gauge_raw) which triggers Materialized Views that transform,
+ * extract hot attributes, and write to optimized MergeTree target tables (traces,
+ * logs, metrics_gauge). This gives extracted top-level columns (HttpMethod,
+ * K8sNamespace, HttpStatusCode, etc.) for primary-key-level query performance.
  *
  * This client replaces LocalTelemetryClient (Jaeger + Prometheus) when
  * LOCAL_OTEL_CLICKHOUSE_URL is set. It uses the ClickHouse HTTP API (port 8123)
@@ -87,7 +90,7 @@ public class ClickHouseTelemetryClient {
                     Events.Name,
                     Events.Timestamp,
                     Events.Attributes
-                FROM otel_traces
+                FROM traces
                 WHERE Timestamp >= now() - INTERVAL %d MINUTE
                   AND ServiceName = '%s'
                   %s
@@ -154,7 +157,7 @@ public class ClickHouseTelemetryClient {
                     SpanId,
                     ServiceName,
                     LogAttributes
-                FROM otel_logs
+                FROM logs
                 WHERE Timestamp >= now() - INTERVAL %d MINUTE
                   AND ServiceName = '%s'
                   %s
@@ -198,7 +201,7 @@ public class ClickHouseTelemetryClient {
     public double getRequestRate() {
         String sql = """
                 SELECT count() / (%d * 60.0) AS rate
-                FROM otel_traces
+                FROM traces
                 WHERE Timestamp >= now() - INTERVAL %d MINUTE
                   AND ServiceName = '%s'
                   AND SpanKind = 'Server'
@@ -215,7 +218,7 @@ public class ClickHouseTelemetryClient {
                 SELECT
                     countIf(StatusCode = 'Error') AS errors,
                     count()                        AS total
-                FROM otel_traces
+                FROM traces
                 WHERE Timestamp >= now() - INTERVAL %d MINUTE
                   AND ServiceName = '%s'
                   AND SpanKind = 'Server'
@@ -239,7 +242,7 @@ public class ClickHouseTelemetryClient {
                     quantile(0.50)(Duration) / 1000000.0 AS p50,
                     quantile(0.95)(Duration) / 1000000.0 AS p95,
                     quantile(0.99)(Duration) / 1000000.0 AS p99
-                FROM otel_traces
+                FROM traces
                 WHERE Timestamp >= now() - INTERVAL %d MINUTE
                   AND ServiceName = '%s'
                   AND SpanKind = 'Server'
@@ -264,7 +267,7 @@ public class ClickHouseTelemetryClient {
         for (String metricName : List.of("jvm.memory.used", "jvm_memory_used_bytes")) {
             String sql = """
                     SELECT Value / 1048576.0 AS heapMb
-                    FROM otel_metrics_gauge
+                    FROM metrics_gauge
                     WHERE MetricName = '%s'
                       AND (Attributes['jvm.memory.type'] = 'heap'
                            OR Attributes['area'] = 'heap')
@@ -290,7 +293,7 @@ public class ClickHouseTelemetryClient {
                     : "";
             String sql = """
                     SELECT Value AS connections
-                    FROM otel_metrics_gauge
+                    FROM metrics_gauge
                     WHERE MetricName = '%s'
                       %s
                       AND TimeUnix >= now() - INTERVAL %d MINUTE
@@ -314,7 +317,7 @@ public class ClickHouseTelemetryClient {
                     Attributes['name']  AS cbName,
                     Attributes['state'] AS cbState,
                     Value
-                FROM otel_metrics_gauge
+                FROM metrics_gauge
                 WHERE (MetricName = 'resilience4j.circuitbreaker.state'
                     OR MetricName = 'resilience4j_circuitbreaker_state')
                   AND TimeUnix >= now() - INTERVAL %d MINUTE
