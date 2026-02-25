@@ -64,29 +64,28 @@ const MCP_TOOLS = [
   },
 ];
 
-const YAML_EXAMPLE = `# valis-dynatrace-tools.yaml
-tools:
+const YAML_EXAMPLE = `tools:
   enabled:
-    - dt_dql_execute
-    - dt_documents_list
-    - dt_document_get
-    - dt_document_create    # write access: enabled for autonomous workflows
-    - dt_slos_list
-    - dt_slo_evaluate
-    - dt_slo_create          # can create SLOs from detected patterns
+    - dql_execute
+    - documents_list
+    - document_get
+    - document_create       # write access: enabled for autonomous workflows
+    - slos_list
+    - slo_evaluate
+    - slo_create            # can create SLOs from detected patterns
   disabled:
-    - dt_document_delete     # destructive: requires explicit opt-in
-    - dt_workflow_delete
-    - dt_slo_delete
+    - document_delete       # destructive: requires explicit opt-in
+    - workflow_delete
+    - slo_delete
   contexts:
-    investigation:           # read-heavy for initial triage
-      - dt_dql_execute
-      - dt_documents_list
-      - dt_slo_evaluate
-    remediation:             # write-enabled for autonomous fixes
-      - dt_document_create
-      - dt_slo_create
-      - dt_workflow_create`;
+    investigation:          # read-heavy for initial triage
+      - dql_execute
+      - documents_list
+      - slo_evaluate
+    remediation:            # write-enabled for autonomous fixes
+      - document_create
+      - slo_create
+      - workflow_create`;
 
 const ARTICLE_SECTIONS = [
   {
@@ -96,26 +95,30 @@ const ARTICLE_SECTIONS = [
 But this argument has a ceiling, and that ceiling is exactly where autonomous observability begins.`,
   },
   {
-    heading: 'The ceiling: read-only access can\'t close the loop',
+    heading: "The ceiling: read-only access can't close the loop",
     body: `Honeycomb's MCP server — like nearly every vendor-built MCP server in the observability space — is predominantly read-only. You can query datasets. You can list triggers and SLOs. You can fetch a trace. What you cannot do is create a dashboard from the results of your investigation, configure an alert based on a pattern you just detected, set up an SLO for a service you just discovered is failing, or modify a trigger threshold that's producing false positives.
 
 This is not a criticism of Honeycomb specifically. Dynatrace, Datadog, and New Relic follow the same pattern. Vendors are understandably cautious about giving AI agents write access to production configuration. But caution and autonomy are fundamentally at odds. If the agent can observe but not act, you don't have autonomous observability. You have a chatbot that reads dashboards aloud.
 
-VALIS requires full CRUD access across every platform it touches — not because write access is a nice-to-have, but because the closed loop is the product. Detect an anti-pattern → create a dashboard documenting it → configure an alert for recurrence → generate the fix → deploy it → verify the traces show improvement. Every step in that chain requires write operations that no vendor MCP server provides.`,
+Autonomous workflows require full CRUD access — not because write access is a nice-to-have, but because the closed loop demands it. Detect an anti-pattern → create a dashboard documenting it → configure an alert for recurrence → generate the fix → deploy it → verify the traces show improvement. Every step in that chain requires write operations that no vendor MCP server provides.`,
   },
   {
-    heading: 'Why we don\'t wait',
-    body: `There are eight observability platforms in the VALIS architecture: Dynatrace, Datadog, Honeycomb, Grafana, Kibana, Elasticsearch, Dash0, and AppDynamics. No vendor has an incentive to build MCP tooling that integrates with their competitors. Dynatrace will never ship tools that help an AI agent migrate your dashboards to Grafana. Datadog will never expose the APIs needed for an autonomous agent to prove your workload runs 10x cheaper on ClickHouse. Cross-platform orchestration is structurally impossible if you only use vendor-provided servers.
+    heading: "Why we don't wait",
+    body: `No vendor has an incentive to build MCP tooling that integrates with their competitors. Dynatrace will never ship tools that help an AI agent migrate your dashboards to Grafana. Datadog will never expose the APIs needed for an autonomous agent to prove your workload runs cheaper on ClickHouse. Cross-platform orchestration is structurally impossible if you only use vendor-provided servers.
 
-Even within a single platform, vendor timelines don't align with practitioner need. Honeycomb shipped their initial MCP server in late 2024, deprecated the self-hosted version in mid-2025, and launched the hosted replacement as generally available months later. Our Honeycomb server had 54 tools covering full CRUD across datasets, columns, queries, boards, SLOs, triggers, burn alerts, recipients, markers, and service maps — while the official server was still read-only with roughly 10 tools. The gap isn't closing. Vendor roadmaps serve vendor priorities.`,
+Even within a single platform, vendor timelines don't align with practitioner need. Honeycomb shipped their initial MCP server in late 2024, deprecated the self-hosted version in mid-2025, and launched the hosted replacement as generally available months later — still predominantly read-only. Platforms like Dynatrace span multiple API surfaces — environment, configuration, platform — each with distinct authentication and capabilities. Waiting for a vendor to expose full coverage across all of those surfaces means waiting indefinitely.
+
+Meanwhile, every observability platform already has comprehensive, well-documented REST APIs. The APIs exist. The authentication mechanisms exist. The only missing piece is the MCP layer that exposes them to AI agents — and that layer is straightforward to build in Go.`,
   },
   {
     heading: 'The design pattern: API tokens, not OAuth',
-    body: `Every custom MCP server in the VALIS ecosystem uses a deliberate design pattern: API token authentication, not OAuth.
+    body: `Every custom MCP server we build uses a deliberate design pattern: API token authentication, not OAuth.
 
-This is a conscious architectural choice, not a shortcut. OAuth 2.1 is designed for human-initiated, browser-mediated authorization flows. It assumes a user is present to click "Authorize," that sessions expire and require re-authentication, and that the authorization scope is tied to a specific user's permissions at a specific moment. This makes sense when the MCP client is an IDE like Cursor or VS Code, where a developer is sitting at a keyboard.
+This is a conscious architectural choice, not a shortcut.
 
-Autonomous agents don't sit at keyboards. VALIS runs continuous detection loops, orchestrates cross-platform correlations at 3 AM, and chains together tool calls across eight platforms in a single reasoning pass. An OAuth flow that requires browser interaction every 24 hours — which is the current reality for Honeycomb's hosted MCP — is a non-starter for autonomous operation.
+OAuth 2.1 is designed for human-initiated, browser-mediated authorization flows. It assumes a user is present to click "Authorize," that sessions expire and require re-authentication, and that the authorization scope is tied to a specific user's permissions at a specific moment. This makes sense when the MCP client is an IDE like Cursor or VS Code, where a developer is sitting at a keyboard.
+
+Autonomous agents don't sit at keyboards. They run continuous detection loops, orchestrate cross-platform correlations at 3 AM, and chain together tool calls across multiple platforms in a single reasoning pass. An OAuth flow that requires browser interaction every 24 hours — which is the current reality for Honeycomb's hosted MCP — is a non-starter for autonomous operation.
 
 API tokens provide exactly what server-to-server autonomous workflows require: stable, long-lived credentials with explicit scope. Every platform in the observability ecosystem supports them. They're configured once per environment and work indefinitely. There's no session expiration mid-investigation, no browser redirect in a headless container, no token refresh race condition during a critical incident response.
 
@@ -224,27 +227,38 @@ export default function AIPage() {
                   YAML-driven tool control
                 </h3>
                 <p className="text-sm leading-relaxed text-stone-700 dark:text-zinc-300 mb-3">
-                  When you expose full API surfaces via MCP — 96 tools for Dynatrace alone, 54 for
-                  Honeycomb, comparable coverage for every other platform — the question becomes: how
-                  do you control what an agent can actually use?
+                  When you expose full API surfaces via MCP — spanning dashboards, queries, SLOs,
+                  workflows, alerting, configuration, and more — the question becomes: how do you
+                  control what an agent can actually use?
                 </p>
                 <p className="text-sm leading-relaxed text-stone-700 dark:text-zinc-300 mb-3">
                   Honeycomb&apos;s answer is to curate at the server level. They decide which tools
-                  exist. We solved this differently. Every VALIS MCP server reads a YAML configuration
-                  file that specifies exactly which tools are available for a given deployment context.
+                  exist. You get what they ship. Jessica Kerr from Honeycomb wrote about wanting to
+                  &ldquo;configure which subagents know about which MCP&rdquo; and load context
+                  incrementally — capabilities she correctly identified as missing from the current
+                  MCP ecosystem. We solved this differently. Every custom MCP server reads a YAML
+                  configuration file that specifies exactly which tools are available for a given
+                  deployment context.
                 </p>
                 <pre className="rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-4 text-[11px] leading-relaxed text-zinc-300 overflow-x-auto font-mono my-4">
                   {YAML_EXAMPLE}
                 </pre>
-                <p className="text-sm leading-relaxed text-stone-700 dark:text-zinc-300">
+                <p className="text-sm leading-relaxed text-stone-700 dark:text-zinc-300 mb-3">
                   This gives you something no vendor MCP server offers:{' '}
                   <strong className="font-semibold text-stone-900 dark:text-zinc-100">
                     operator-controlled granularity over tool availability, scoped by workflow context,
                     defined in version-controlled configuration.
-                  </strong>{' '}
-                  Want read-only mode during a vendor evaluation? Change the YAML. Want write operations
-                  only during a maintenance window? Change the YAML. Three environments, three YAML
-                  files.
+                  </strong>
+                </p>
+                <p className="text-sm leading-relaxed text-stone-700 dark:text-zinc-300">
+                  Want to run in read-only mode during a vendor evaluation? Change the YAML. Want to
+                  enable write operations only during a maintenance window? Change the YAML. Want
+                  different tool sets for different environments — production read-only, staging full
+                  CRUD, development everything? Three YAML files. Want to add a new tool the day the
+                  vendor releases a new API endpoint? Add it to the server, add it to the config,
+                  deploy. This is the &ldquo;nice thing&rdquo; Jessica Kerr described wanting —
+                  subagent-specific tool scoping with incremental context loading — implemented today,
+                  in production, across multiple platforms.
                 </p>
               </div>
 
