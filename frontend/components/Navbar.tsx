@@ -9,6 +9,7 @@ const navLinks = [
   { href: '/feed', label: 'Feed' },
   { href: '/telemetry', label: 'Telemetry' },
   { href: '/ai', label: 'AI' },
+  { href: '/otel', label: 'OTel' },
   { href: '/about', label: 'About' },
 ];
 
