@@ -12,4 +12,16 @@ data:
   # This script just ensures the database exists before the collector connects.
   init-otel.sql: |
     CREATE DATABASE IF NOT EXISTS otel;
+  # Override the entrypoint-generated default-user.xml which restricts default user
+  # to localhost only when CLICKHOUSE_USER/PASSWORD are not set.
+  network-access.xml: |
+    <clickhouse>
+      <users>
+        <default>
+          <networks>
+            <ip>::/0</ip>
+          </networks>
+        </default>
+      </users>
+    </clickhouse>
 {{- end }}

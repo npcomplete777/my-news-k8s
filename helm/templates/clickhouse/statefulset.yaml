@@ -37,8 +37,6 @@ spec:
           env:
             - name: CLICKHOUSE_DB
               value: otel
-            - name: CLICKHOUSE_USER
-              value: default
             {{- if .Values.localOtel.clickhouse.auth.password }}
             - name: CLICKHOUSE_PASSWORD
               value: {{ .Values.localOtel.clickhouse.auth.password | quote }}
@@ -48,6 +46,9 @@ spec:
               mountPath: /var/lib/clickhouse
             - name: init-db
               mountPath: /docker-entrypoint-initdb.d
+            - name: init-db
+              mountPath: /etc/clickhouse-server/users.d/network-access.xml
+              subPath: network-access.xml
           resources:
             {{- toYaml .Values.localOtel.clickhouse.resources | nindent 12 }}
           readinessProbe:
