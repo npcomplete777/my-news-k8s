@@ -119,7 +119,10 @@ export function initBrowserOtel(): void {
 
   provider.addSpanProcessor(new NotifyingSpanProcessor());
   provider.addSpanProcessor(
-    new BatchSpanProcessor(new OTLPTraceExporter({ url: '/api/otel/v1/traces' }))
+    new BatchSpanProcessor(new OTLPTraceExporter({
+      url: '/api/otel/v1/traces',
+      headers: {}, // force XHR transport instead of sendBeacon (sendBeacon is fire-and-forget with no retry)
+    }))
   );
 
   provider.register();
