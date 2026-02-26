@@ -7,6 +7,7 @@ interface GeoResult {
   city: string;
   isp: string;
   timezone: string;
+  _debug?: { resolvedIp: string; cfIp: string | null; xff: string | null };
 }
 
 // In-memory cache: ip → { data, expiry }
@@ -23,22 +24,24 @@ function isPrivateIp(ip: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  // CF-Connecting-IP is the definitive real IP when behind Cloudflare.
-  // X-Forwarded-For / X-Real-IP contain Cloudflare edge IPs when proxied, not the visitor.
+  // CF-Connecting-IP is the definitive real visitor IP when behind Cloudflare.
+  // X-Forwarded-For contains Cloudflare edge IPs when proxied, not the real visitor.
   const cfIp = req.headers.get('cf-connecting-ip');
   const forwarded = req.headers.get('x-forwarded-for');
   const realIp = req.headers.get('x-real-ip');
   const ip = (cfIp ?? (forwarded ? forwarded.split(',')[0] : realIp ?? '')).trim() || '127.0.0.1';
 
+  const debug = { resolvedIp: ip, cfIp, xff: forwarded };
+
   if (isPrivateIp(ip)) {
     return Response.json({
       country: 'Local Network', countryCode: 'XX',
-      region: 'Private', city: ip, isp: 'Internal', timezone: '',
+      region: 'Private', city: ip, isp: 'Internal', timezone: '', _debug: debug,
     });
   }
 
   const cached = geoCache.get(ip);
-  if (cached && cached.expiry > Date.now()) return Response.json(cached.data);
+  if (cached && cached.expiry > Date.now()) return Response.json({ ...cached.data, _debug: debug });
 
   try {
     const res = await fetch(`https://ipwho.is/${ip}`, {
@@ -57,12 +60,14 @@ export async function GET(req: NextRequest) {
           timezone: d.timezone?.id ?? '',
         };
         geoCache.set(ip, { data: result, expiry: Date.now() + 3_600_000 });
-        return Response.json(result);
+        return Response.json({ ...result, _debug: debug });
       }
+      // ipwho.is returned success:false — return raw response for debugging
+      return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: { ...debug, ipwhoResponse: d } });
     }
-  } catch {
-    // timeout or network error — fall through
+  } catch (e) {
+    return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: { ...debug, error: String(e) } });
   }
 
-  return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '' });
+  return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: debug });
 }
