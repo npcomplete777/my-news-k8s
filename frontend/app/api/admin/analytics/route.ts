@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       ResourceAttributes['browser.screen_height']     AS sh,
       ResourceAttributes['browser.device_pixel_ratio'] AS dpr,
       ResourceAttributes['browser.platform']          AS platform
-    FROM otel_traces
+    FROM traces
     WHERE ServiceName = 'o11y-news-browser'
       AND SpanName = 'page.view'
       AND Timestamp > now() - INTERVAL ${days} DAY
