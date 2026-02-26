@@ -7,7 +7,6 @@ interface GeoResult {
   city: string;
   isp: string;
   timezone: string;
-  _debug?: { resolvedIp: string; cfIp: string | null; xff: string | null };
 }
 
 // In-memory cache: ip → { data, expiry }
@@ -25,49 +24,59 @@ function isPrivateIp(ip: string): boolean {
 
 export async function GET(req: NextRequest) {
   // CF-Connecting-IP is the definitive real visitor IP when behind Cloudflare.
-  // X-Forwarded-For contains Cloudflare edge IPs when proxied, not the real visitor.
-  const cfIp = req.headers.get('cf-connecting-ip');
+  // X-Forwarded-For contains Cloudflare edge IPs, not the real visitor.
+  const cfIp      = req.headers.get('cf-connecting-ip');
   const forwarded = req.headers.get('x-forwarded-for');
-  const realIp = req.headers.get('x-real-ip');
+  const realIp    = req.headers.get('x-real-ip');
   const ip = (cfIp ?? (forwarded ? forwarded.split(',')[0] : realIp ?? '')).trim() || '127.0.0.1';
-
-  const debug = { resolvedIp: ip, cfIp, xff: forwarded };
 
   if (isPrivateIp(ip)) {
     return Response.json({
       country: 'Local Network', countryCode: 'XX',
-      region: 'Private', city: ip, isp: 'Internal', timezone: '', _debug: debug,
+      region: 'Private', city: ip, isp: 'Internal', timezone: '',
     });
   }
 
   const cached = geoCache.get(ip);
-  if (cached && cached.expiry > Date.now()) return Response.json({ ...cached.data, _debug: debug });
+  if (cached && cached.expiry > Date.now()) return Response.json(cached.data);
 
+  // Primary: ipapi.co — free tier, 1k req/day, proper IANA timezones, ISP via "org" field
   try {
-    const res = await fetch(`https://ipwho.is/${ip}`, {
-      signal: AbortSignal.timeout(2500),
-      headers: { Accept: 'application/json' },
+    const res = await fetch(`https://ipapi.co/${ip}/json/`, {
+      signal: AbortSignal.timeout(3000),
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'o11y-news-observability/1.0',
+      },
     });
     if (res.ok) {
       const d = await res.json();
-      if (d.success) {
+      if (!d.error) {
         const result: GeoResult = {
-          country: d.country ?? '',
+          country:     d.country_name ?? '',
           countryCode: d.country_code ?? '',
-          region: d.region ?? '',
-          city: d.city ?? '',
-          isp: d.connection?.isp ?? d.connection?.org ?? '',
-          timezone: d.timezone?.id ?? '',
+          region:      d.region ?? '',
+          city:        d.city ?? '',
+          isp:         d.org ?? '',
+          timezone:    d.timezone ?? '',
         };
         geoCache.set(ip, { data: result, expiry: Date.now() + 3_600_000 });
-        return Response.json({ ...result, _debug: debug });
+        return Response.json(result);
       }
-      // ipwho.is returned success:false — return raw response for debugging
-      return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: { ...debug, ipwhoResponse: d } });
     }
-  } catch (e) {
-    return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: { ...debug, error: String(e) } });
+  } catch {
+    // timeout or network error — fall through to Cloudflare header fallback
   }
 
-  return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '', _debug: debug });
+  // Fallback: Cloudflare injects CF-IPCountry on all plans at zero cost/latency.
+  // City/region headers require Business plan — use what's available.
+  const cfCountry = req.headers.get('cf-ipcountry');
+  if (cfCountry && cfCountry !== 'XX') {
+    return Response.json({
+      country: '', countryCode: cfCountry,
+      region: '', city: '', isp: '', timezone: '',
+    });
+  }
+
+  return Response.json({ country: '', countryCode: '', region: '', city: '', isp: '', timezone: '' });
 }
