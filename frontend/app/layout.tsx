@@ -15,7 +15,7 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: 'O11y Alchemy',
   description:
-    'Agentic AI observability showcase — real-time traces, metrics, and logs from a live Kubernetes cluster, powered by VALIS and OpenTelemetry.',
+    'Agentic AI observability showcase — real-time traces, metrics, and logs from a live Kubernetes cluster, powered by OpenTelemetry and ClickHouse.',
 };
 
 export default function RootLayout({

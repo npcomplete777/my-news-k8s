@@ -62,6 +62,38 @@ class NotifyingSpanProcessor implements SpanProcessor {
   }
 }
 
+// Module-level span handle and provider ref so OTelProvider can rotate spans on route change
+let _pageSpan: Span | null = null;
+let _provider: WebTracerProvider | null = null;
+
+/** End the current page.view span and flush. Called by OTelProvider on route change. */
+export function endPageSpan(): void {
+  if (_pageSpan) {
+    _pageSpan.end();
+    _pageSpan = null;
+  }
+  _provider?.forceFlush().catch(() => {});
+}
+
+/** Start a new page.view span for the current URL. Called by OTelProvider on route change. */
+export function startPageSpan(): void {
+  if (!_provider) return;
+  endPageSpan();
+  const tracer = trace.getTracer('o11y-news-browser');
+  _pageSpan = tracer.startSpan('page.view', {
+    attributes: {
+      'page.url': window.location.href,
+      'page.path': window.location.pathname,
+      'page.search': window.location.search,
+      'page.hash': window.location.hash,
+      'page.title': document.title,
+      'page.referrer': document.referrer,
+      'viewport.width': window.innerWidth,
+      'viewport.height': window.innerHeight,
+    },
+  });
+}
+
 export function initBrowserOtel(): void {
   if (typeof window === 'undefined') return;
   if (initialized) return;
@@ -70,7 +102,6 @@ export function initBrowserOtel(): void {
   const provider = new WebTracerProvider({
     resource: new Resource({
       [ATTR_SERVICE_NAME]: 'o11y-news-browser',
-      // User identity / environment attributes — stored in ClickHouse on every span
       'browser.user_agent': navigator.userAgent,
       'browser.language': navigator.language,
       'browser.languages': navigator.languages.join(','),
@@ -86,15 +117,13 @@ export function initBrowserOtel(): void {
     }),
   });
 
-  // In-memory: feeds React state for the Browser tab
   provider.addSpanProcessor(new NotifyingSpanProcessor());
-
-  // Batch export to OTel collector via Next.js same-origin proxy
   provider.addSpanProcessor(
     new BatchSpanProcessor(new OTLPTraceExporter({ url: '/api/otel/v1/traces' }))
   );
 
   provider.register();
+  _provider = provider;
 
   registerInstrumentations({
     instrumentations: [
@@ -106,52 +135,19 @@ export function initBrowserOtel(): void {
     ],
   });
 
-  // Track page view duration: one span per page visit, ends when tab hides or page unloads
-  trackPageViews(provider);
-}
-
-function trackPageViews(provider: WebTracerProvider): void {
-  const tracer = trace.getTracer('o11y-news-browser');
-  let pageSpan: Span | null = null;
-
-  function startPageSpan() {
-    pageSpan = tracer.startSpan('page.view', {
-      attributes: {
-        'page.url': window.location.href,
-        'page.path': window.location.pathname,
-        'page.search': window.location.search,
-        'page.hash': window.location.hash,
-        'page.title': document.title,
-        'page.referrer': document.referrer,
-        'viewport.width': window.innerWidth,
-        'viewport.height': window.innerHeight,
-      },
-    });
-  }
-
-  function endPageSpan() {
-    if (pageSpan) {
-      pageSpan.end();
-      pageSpan = null;
-    }
-  }
-
+  // Start the first page span
   startPageSpan();
 
-  // visibilitychange is the most reliable signal for tab hide/close/switch
+  // Tab-level events: hidden/close/mobile background
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
       endPageSpan();
-      // Flush so spans export before the browser suspends the page
-      provider.forceFlush().catch(() => {});
     } else if (document.visibilityState === 'visible') {
       startPageSpan();
     }
   });
 
-  // pagehide fires on mobile and bfcache navigation where visibilitychange may not
   window.addEventListener('pagehide', () => {
     endPageSpan();
-    provider.forceFlush().catch(() => {});
   });
 }
