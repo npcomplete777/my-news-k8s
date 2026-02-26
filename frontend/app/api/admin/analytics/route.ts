@@ -18,19 +18,29 @@ export async function GET(req: NextRequest) {
   const query = `
     SELECT
       formatDateTime(Timestamp, '%Y-%m-%d %H:%i:%S') AS ts,
-      SpanAttributes['page.path']                     AS path,
-      SpanAttributes['page.title']                    AS title,
-      SpanAttributes['page.referrer']                 AS referrer,
-      SpanAttributes['viewport.width']                AS vp_w,
-      SpanAttributes['viewport.height']               AS vp_h,
-      round(Duration / 1e9, 1)                        AS seconds,
-      ResourceAttributes['browser.user_agent']        AS ua,
-      ResourceAttributes['browser.timezone']          AS tz,
-      ResourceAttributes['browser.language']          AS lang,
-      ResourceAttributes['browser.screen_width']      AS sw,
-      ResourceAttributes['browser.screen_height']     AS sh,
+      SpanAttributes['page.path']                      AS path,
+      SpanAttributes['page.title']                     AS title,
+      SpanAttributes['page.referrer']                  AS referrer,
+      SpanAttributes['viewport.width']                 AS vp_w,
+      SpanAttributes['viewport.height']                AS vp_h,
+      round(Duration / 1e9, 1)                         AS seconds,
+      ResourceAttributes['browser.user_agent']         AS ua,
+      ResourceAttributes['browser.timezone']           AS tz,
+      ResourceAttributes['browser.language']           AS lang,
+      ResourceAttributes['browser.screen_width']       AS sw,
+      ResourceAttributes['browser.screen_height']      AS sh,
       ResourceAttributes['browser.device_pixel_ratio'] AS dpr,
-      ResourceAttributes['browser.platform']          AS platform
+      ResourceAttributes['browser.platform']           AS platform,
+      ResourceAttributes['browser.hardware_concurrency'] AS hw_cores,
+      ResourceAttributes['browser.device_memory_gb']   AS device_memory,
+      ResourceAttributes['browser.color_scheme']       AS color_scheme,
+      ResourceAttributes['browser.max_touch_points']   AS touch_points,
+      SpanAttributes['connection.effective_type']      AS connection,
+      SpanAttributes['geo.country']                    AS country,
+      SpanAttributes['geo.country_code']               AS country_code,
+      SpanAttributes['geo.region']                     AS region,
+      SpanAttributes['geo.city']                       AS city,
+      SpanAttributes['geo.isp']                        AS isp
     FROM traces
     WHERE ServiceName = 'o11y-news-browser'
       AND SpanName = 'page.view'
@@ -53,12 +63,7 @@ export async function GET(req: NextRequest) {
     }
 
     const text = await res.text();
-    const rows = text
-      .trim()
-      .split('\n')
-      .filter(Boolean)
-      .map(line => JSON.parse(line));
-
+    const rows = text.trim().split('\n').filter(Boolean).map(line => JSON.parse(line));
     return Response.json(rows);
   } catch (e) {
     return Response.json({ error: String(e) }, { status: 502 });
