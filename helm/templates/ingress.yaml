@@ -51,6 +51,13 @@ spec:
                 name: {{ include "o11y-news.fullname" . }}-frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
+          - path: /api/visitor-context
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
           - path: /api
             pathType: Prefix
             backend:
@@ -83,6 +90,13 @@ spec:
                 port:
                   number: {{ .Values.frontend.service.port }}
           - path: /api/clickhouse
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "o11y-news.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+          - path: /api/visitor-context
             pathType: Prefix
             backend:
               service:

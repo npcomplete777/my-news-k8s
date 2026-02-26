@@ -23,9 +23,12 @@ function isPrivateIp(ip: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  // CF-Connecting-IP is the definitive real IP when behind Cloudflare.
+  // X-Forwarded-For / X-Real-IP contain Cloudflare edge IPs when proxied, not the visitor.
+  const cfIp = req.headers.get('cf-connecting-ip');
   const forwarded = req.headers.get('x-forwarded-for');
   const realIp = req.headers.get('x-real-ip');
-  const ip = (forwarded ? forwarded.split(',')[0] : realIp ?? '').trim() || '127.0.0.1';
+  const ip = (cfIp ?? (forwarded ? forwarded.split(',')[0] : realIp ?? '')).trim() || '127.0.0.1';
 
   if (isPrivateIp(ip)) {
     return Response.json({
