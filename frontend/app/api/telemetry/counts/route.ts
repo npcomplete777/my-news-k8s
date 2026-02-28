@@ -47,7 +47,7 @@ export async function GET(_req: NextRequest) {
   ] = await Promise.all([
     queryClickHouse(`SELECT count() FROM otel.traces WHERE ${WHERE_TIMESTAMP}`).catch(() => 0),
     queryClickHouse(`SELECT count() FROM otel.otel_traces WHERE ${WHERE_TIMESTAMP}`).catch(() => 0),
-    queryClickHouse(`SELECT count() FROM otel.otel_logs WHERE ${WHERE_TIMESTAMP}`).catch(() => 0),
+    queryClickHouse(`SELECT count() FROM otel.logs WHERE ${WHERE_TIMESTAMP}`).catch(() => 0),
     queryClickHouse(`SELECT count() FROM otel.otel_metrics_gauge WHERE ${WHERE_TIME_UNIX}`).catch(() => 0),
     queryClickHouse(`SELECT count() FROM otel.otel_metrics_sum WHERE ${WHERE_TIME_UNIX}`).catch(() => 0),
     queryClickHouse(`SELECT count() FROM otel.otel_metrics_histogram WHERE ${WHERE_TIME_UNIX}`).catch(() => 0),
