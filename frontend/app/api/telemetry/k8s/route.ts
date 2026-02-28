@@ -8,8 +8,7 @@ async function ch(sql: string): Promise<string> {
     body: sql + '\nFORMAT JSONEachRow',
     headers: { 'Content-Type': 'text/plain' },
     signal: AbortSignal.timeout(5000),
-    // @ts-expect-error next cache
-    next: { revalidate: 30 },
+    cache: 'no-store',
   });
   if (!res.ok) throw new Error(`CH ${res.status}`);
   return res.text();
