@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic';
 
-const OtelHelixAnimation = dynamic(() => import('./OtelHelixAnimation'), { ssr: false });
+const LiveServiceMap = dynamic(() => import('./LiveServiceMap'), { ssr: false });
 
 export function HelixAnimationClient() {
-  return <OtelHelixAnimation />;
+  return <LiveServiceMap />;
 }

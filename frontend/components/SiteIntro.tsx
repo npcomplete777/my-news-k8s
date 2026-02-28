@@ -129,8 +129,8 @@ export async function SiteIntro() {
           </Link>
         </div>
 
-        {/* Center — OTel helix animation */}
-        <div className="hidden lg:block rounded-xl overflow-hidden border border-zinc-800/60" style={{ height: 480 }}>
+        {/* Center — live service topology map */}
+        <div className="hidden lg:block overflow-hidden" style={{ height: 480 }}>
           <HelixAnimationClient />
         </div>
 
