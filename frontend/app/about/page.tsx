@@ -101,7 +101,7 @@ export default function AboutPage() {
         </p>
         <div className="flex flex-wrap gap-3 mt-1">
           <a
-            href="https://www.linkedin.com/in/aaron-jacobs-o11y/"
+            href="https://www.linkedin.com/in/jakobovits/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
