@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const OtelHelixAnimation = dynamic(() => import('./OtelHelixAnimation'), { ssr: false });
 
 const PIPELINE_BASE = [
   {
@@ -59,7 +62,7 @@ export async function SiteIntro() {
 
   return (
     <section className="border-b border-stone-200 dark:border-zinc-800 py-10 sm:py-14">
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px] lg:gap-16 lg:items-start">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_420px_240px] lg:gap-8 lg:items-start">
 
         {/* Left — headline + copy + CTA */}
         <div className="flex flex-col gap-5">
@@ -126,6 +129,11 @@ export async function SiteIntro() {
             </div>
             <span className="ml-auto text-stone-300 dark:text-zinc-700 group-hover:text-amber-500 transition-colors text-sm">→</span>
           </Link>
+        </div>
+
+        {/* Center — OTel helix animation */}
+        <div className="hidden lg:block rounded-xl overflow-hidden border border-zinc-800/60" style={{ height: 480 }}>
+          <OtelHelixAnimation />
         </div>
 
         {/* Right — pipeline timeline */}
