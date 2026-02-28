@@ -109,6 +109,23 @@ export async function SiteIntro() {
               How the Data Works
             </Link>
           </div>
+
+          {/* Cost CTA */}
+          <Link
+            href="/telemetry/cost"
+            className="group flex items-center gap-3 rounded-lg border border-stone-200 dark:border-zinc-800 px-4 py-3 transition-colors hover:border-amber-500/50 hover:bg-amber-50/30 dark:hover:border-amber-500/30 dark:hover:bg-amber-900/10 w-fit"
+          >
+            <span className="text-lg">💸</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs font-black uppercase tracking-widest text-stone-900 dark:text-zinc-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                What does this telemetry cost?
+              </span>
+              <span className="text-[10px] text-stone-400 dark:text-zinc-500">
+                Live cost comparison across Datadog, Dynatrace, Grafana, Dash0, and 3 more
+              </span>
+            </div>
+            <span className="ml-auto text-stone-300 dark:text-zinc-700 group-hover:text-amber-500 transition-colors text-sm">→</span>
+          </Link>
         </div>
 
         {/* Right — pipeline timeline */}

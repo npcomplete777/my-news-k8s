@@ -8,6 +8,7 @@ import { useTheme } from '@/components/ThemeProvider';
 const navLinks = [
   { href: '/feed', label: 'Feed' },
   { href: '/telemetry', label: 'Telemetry' },
+  { href: '/telemetry/cost', label: 'Cost' },
   { href: '/anti-patterns', label: 'Anti-Patterns' },
   { href: '/ai', label: 'AI' },
   { href: '/otel', label: 'OTel' },
