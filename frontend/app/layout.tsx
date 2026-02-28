@@ -12,10 +12,33 @@ const barlowCondensed = Barlow_Condensed({
   display: 'swap',
 });
 
+const DESCRIPTION =
+  'Agentic AI observability showcase — real-time traces, metrics, and logs from a live Kubernetes cluster, powered by OpenTelemetry and ClickHouse.';
+
 export const metadata: Metadata = {
-  title: 'O11y Alchemy',
-  description:
-    'Agentic AI observability showcase — real-time traces, metrics, and logs from a live Kubernetes cluster, powered by OpenTelemetry and ClickHouse.',
+  metadataBase: new URL('https://o11y-alchemy.com'),
+  title: {
+    default: 'O11y Alchemy',
+    template: '%s — O11y Alchemy',
+  },
+  description: DESCRIPTION,
+  openGraph: {
+    siteName: 'O11y Alchemy',
+    type: 'website',
+    url: '/',
+    title: 'O11y Alchemy',
+    description: DESCRIPTION,
+    images: [{ url: '/pi5-homelab.jpg', width: 1200, height: 800, alt: 'O11y Alchemy' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'O11y Alchemy',
+    description: DESCRIPTION,
+    images: ['/pi5-homelab.jpg'],
+  },
+  alternates: {
+    types: { 'application/rss+xml': '/rss.xml' },
+  },
 };
 
 export default function RootLayout({

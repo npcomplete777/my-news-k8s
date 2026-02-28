@@ -1,3 +1,17 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'AI & MCP Tools',
+  description:
+    'Open-source Model Context Protocol servers for observability: VALIS (AI-native trace analysis), Kibana MCP, Elasticsearch MCP, Dash0 MCP, Grafana MCP, and Dynatrace MCP.',
+  openGraph: {
+    title: 'AI & MCP Tools — O11y Alchemy',
+    description:
+      'Open-source MCP servers that give AI agents full control over your observability stack — Kibana, Grafana, Dash0, Dynatrace, and more.',
+    url: '/ai',
+  },
+};
+
 const MCP_TOOLS = [
   {
     name: 'VALIS MCP',

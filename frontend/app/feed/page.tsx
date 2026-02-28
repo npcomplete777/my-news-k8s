@@ -1,7 +1,19 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { SourceFilter } from '@/components/SourceFilter';
 import { TopicFilter } from '@/components/TopicFilter';
 import { ArticleFeed } from '@/components/ArticleFeed';
+
+export const metadata: Metadata = {
+  title: 'Industry Feed',
+  description:
+    'Kubernetes, observability, and platform engineering news — aggregated from Hacker News, CNCF, SRE Weekly, and more. Curated and tagged by AI.',
+  openGraph: {
+    title: 'Industry Feed — O11y Alchemy',
+    description: 'Live observability and platform engineering news, curated by AI.',
+    url: '/feed',
+  },
+};
 
 export default function FeedPage() {
   return (
