@@ -197,21 +197,29 @@ export default function OtelHelixAnimation() {
     const ctx = canvas.getContext('2d')!;
     initParticles();
 
-    const resize = () => {
+    const applySize = () => {
+      const container = canvas.parentElement!;
+      const w = container.offsetWidth || container.clientWidth;
+      const h = container.offsetHeight || container.clientHeight;
+      if (w === 0 || h === 0) return false;
       const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.parentElement!.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return true;
     };
-    resize();
-    window.addEventListener('resize', resize);
+
+    // Use ResizeObserver so we react whenever the container actually has dimensions
+    const ro = new ResizeObserver(() => applySize());
+    ro.observe(canvas.parentElement!);
+    applySize();
+    window.addEventListener('resize', () => applySize());
 
     const draw = () => {
-      const rect = canvas.getBoundingClientRect();
-      const w = rect.width; const h = rect.height;
+      const w = canvas.offsetWidth || canvas.clientWidth;
+      const h = canvas.offsetHeight || canvas.clientHeight;
       if (!pausedRef.current) timeRef.current += 0.016;
       const time = timeRef.current;
       const posFunc = viewModeRef.current === 'helix' ? getHelixPosition : getOrbitalPosition;
@@ -379,7 +387,8 @@ export default function OtelHelixAnimation() {
     animRef.current = requestAnimationFrame(draw);
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
-      window.removeEventListener('resize', resize);
+      ro.disconnect();
+      window.removeEventListener('resize', () => applySize());
     };
   }, [getHelixPosition, getOrbitalPosition, initParticles]);
 
