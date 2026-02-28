@@ -1,7 +1,5 @@
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-const OtelHelixAnimation = dynamic(() => import('./OtelHelixAnimation'), { ssr: false });
+import { HelixAnimationClient } from './HelixAnimationClient';
 
 const PIPELINE_BASE = [
   {
@@ -133,7 +131,7 @@ export async function SiteIntro() {
 
         {/* Center — OTel helix animation */}
         <div className="hidden lg:block rounded-xl overflow-hidden border border-zinc-800/60" style={{ height: 480 }}>
-          <OtelHelixAnimation />
+          <HelixAnimationClient />
         </div>
 
         {/* Right — pipeline timeline */}
