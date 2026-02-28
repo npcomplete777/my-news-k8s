@@ -317,7 +317,8 @@ export default function LiveServiceMap() {
       ro.disconnect();
       window.removeEventListener('resize', applySize);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — intentional: reads from refs only
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative w-full h-full">
