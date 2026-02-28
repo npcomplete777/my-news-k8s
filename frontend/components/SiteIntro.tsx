@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const PIPELINE = [
+const PIPELINE_BASE = [
   {
     label: 'Your Browser',
     detail: 'Every click, scroll, and page load is an event.',
@@ -11,7 +11,7 @@ const PIPELINE = [
   },
   {
     label: 'ClickHouse',
-    detail: '228 million rows stored. Compressed, indexed, queryable in milliseconds.',
+    detail: null as string | null, // filled with live count below
   },
   {
     label: 'This Page',
@@ -19,7 +19,44 @@ const PIPELINE = [
   },
 ];
 
-export function SiteIntro() {
+async function getSpanCount(): Promise<number | null> {
+  const url = process.env.CLICKHOUSE_URL ?? 'http://clickhouse:8123';
+  try {
+    // Sum spans across both tables: otelcol-written (traces) + Dash0-written (otel_traces)
+    const sql = `SELECT (SELECT count() FROM otel.traces) + (SELECT count() FROM otel.otel_traces)`;
+    const res = await fetch(`${url}/?output_format_json_quote_64bit_integers=0`, {
+      method: 'POST',
+      body: sql,
+      headers: { 'Content-Type': 'text/plain' },
+      signal: AbortSignal.timeout(4000),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return null;
+    const text = (await res.text()).trim();
+    const n = parseInt(text, 10);
+    return isNaN(n) ? null : n;
+  } catch {
+    return null;
+  }
+}
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
+export async function SiteIntro() {
+  const spanCount = await getSpanCount();
+
+  const clickhouseDetail = spanCount != null
+    ? `${formatCount(spanCount)} spans stored on this cluster. Compressed, indexed, queryable in milliseconds.`
+    : 'Every trace from this site lands here. Compressed, indexed, queryable in milliseconds.';
+
+  const PIPELINE = PIPELINE_BASE.map((step) =>
+    step.label === 'ClickHouse' ? { ...step, detail: clickhouseDetail } : step
+  );
+
   return (
     <section className="border-b border-stone-200 dark:border-zinc-800 py-10 sm:py-14">
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px] lg:gap-16 lg:items-start">
@@ -47,19 +84,20 @@ export function SiteIntro() {
 
           {/* Body — plain English, no jargon assumed */}
           <p className="max-w-md text-base leading-relaxed text-stone-600 dark:text-zinc-400">
-            Every interaction you make here is captured as a real-time data trace —
-            stored, compressed, and made queryable in under a second. The Telemetry
-            tab shows you exactly what your visit looks like from the inside.
+            Every click, every page load, every API call generates real OpenTelemetry
+            traces and metrics — the same signals you&apos;d find in any production system.
+            The Telemetry tab lets you watch your own session flow through the stack
+            in real time.
           </p>
 
           {/* Supporting detail */}
           <p className="max-w-md text-sm leading-relaxed text-stone-400 dark:text-zinc-600">
             Built with{' '}
             <span className="font-semibold text-stone-600 dark:text-zinc-400">OpenTelemetry</span>
-            {' '}(the open standard for application monitoring),{' '}
+            ,{' '}
             <span className="font-semibold text-stone-600 dark:text-zinc-400">ClickHouse</span>
-            {' '}(a column-oriented analytics database), and a custom Spring Boot backend
-            running inside Kubernetes — all instrumented end-to-end.
+            , and a custom Spring Boot backend running inside Kubernetes — fully
+            instrumented, end to end.
           </p>
 
           {/* CTA row */}
