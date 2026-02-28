@@ -6,7 +6,7 @@ import { onBrowserSpan } from '@/lib/otel-browser';
 import type { TelemetryCounts } from '@/app/api/telemetry/counts/route';
 
 export interface LiveCounts {
-  /** 5-min backend counts from ClickHouse */
+  /** 30-min backend counts from ClickHouse */
   backend: TelemetryCounts | null;
   /** Browser spans accumulated since page load */
   browserSpans: number;
@@ -64,9 +64,9 @@ export function useTelemetryCounts(): LiveCounts {
 
 /** Time-window options for how to extrapolate the cost view */
 export const TIME_WINDOWS = [
-  { label: 'Per hour', multiplier: 12 },         // 5min × 12 = 1hr
-  { label: 'Per day', multiplier: 288 },          // 5min × 288 = 24hr
-  { label: 'Per month', multiplier: 8_640 },      // 5min × 8,640 = 30d
+  { label: 'Per hour', multiplier: 2 },           // 30min × 2 = 1hr
+  { label: 'Per day', multiplier: 48 },           // 30min × 48 = 24hr
+  { label: 'Per month', multiplier: 1_440 },      // 30min × 1,440 = 30d
 ] as const;
 
 export type TimeWindow = typeof TIME_WINDOWS[number];

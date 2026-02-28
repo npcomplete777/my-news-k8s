@@ -67,7 +67,7 @@ export function SignalCounters({ counts }: Props) {
       )}
       {backend?.source === 'clickhouse' && (
         <p className="text-xs text-stone-400 dark:text-zinc-500">
-          Live counts from ClickHouse · last 5 minutes · refreshes every 10 s
+          Live counts from ClickHouse · last 30 minutes · refreshes every 10 s
         </p>
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
