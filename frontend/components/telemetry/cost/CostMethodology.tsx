@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ASSUMPTIONS, VENDORS } from '@/lib/vendor-pricing';
+import { ASSUMPTIONS } from '@/lib/vendor-pricing';
 
 export function CostMethodology() {
   const [open, setOpen] = useState(false);
@@ -27,6 +27,13 @@ export function CostMethodology() {
 
       {open && (
         <div className="mt-4 flex flex-col gap-5 border-t border-stone-100 dark:border-zinc-800 pt-4">
+          <a
+            href="/telemetry/cost/methodology"
+            className="text-xs font-bold uppercase tracking-wider text-stone-500 hover:text-stone-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+          >
+            → Full calculation details for all 7 vendors
+          </a>
+
           {/* Disclaimer */}
           <div className="rounded-md border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10 p-3">
             <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
@@ -56,44 +63,6 @@ export function CostMethodology() {
                 <div key={label as string} className="flex gap-2">
                   <span className="text-xs text-stone-400 dark:text-zinc-500 min-w-0">{label}:</span>
                   <span className="text-xs font-mono text-stone-700 dark:text-zinc-300">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Per-vendor sources */}
-          <div>
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-stone-400 dark:text-zinc-500">
-              Pricing sources (as of Feb 2025)
-            </p>
-            <div className="flex flex-col gap-2">
-              {VENDORS.map(v => (
-                <div key={v.vendor} className="flex items-start gap-3">
-                  <span
-                    className="w-24 shrink-0 text-[10px] font-bold uppercase tracking-wide"
-                    style={{ color: v.color }}
-                  >
-                    {v.shortName}
-                  </span>
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <p className="text-[10px] text-stone-500 dark:text-zinc-500">
-                      Metrics: {v.metrics.sourceNote}
-                    </p>
-                    <p className="text-[10px] text-stone-500 dark:text-zinc-500">
-                      Logs: {v.logs.sourceNote}
-                    </p>
-                    <p className="text-[10px] text-stone-500 dark:text-zinc-500">
-                      Traces: {v.traces.sourceNote}
-                    </p>
-                    <a
-                      href={v.pricingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] font-bold text-stone-400 hover:text-stone-700 dark:text-zinc-600 dark:hover:text-zinc-400 transition-colors"
-                    >
-                      {v.pricingUrl} →
-                    </a>
-                  </div>
                 </div>
               ))}
             </div>

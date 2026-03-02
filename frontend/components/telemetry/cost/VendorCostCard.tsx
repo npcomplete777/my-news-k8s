@@ -9,9 +9,10 @@ interface Props {
   rank: number; // 1 = cheapest
   totalVendors: number;
   windowLabel: string; // e.g. "per month"
+  includeMinimums?: boolean;
 }
 
-export function VendorCostCard({ breakdown: b, rank, totalVendors, windowLabel }: Props) {
+export function VendorCostCard({ breakdown: b, rank, totalVendors, windowLabel, includeMinimums }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const isCheapest = rank === 1;
@@ -66,6 +67,11 @@ export function VendorCostCard({ breakdown: b, rank, totalVendors, windowLabel }
           <AnimatedNumber value={b.total} format={fmtCost} durationMs={700} />
         </p>
         <p className="text-xs text-stone-400 dark:text-zinc-500 mt-0.5">{windowLabel}</p>
+        {b.minimumCost && !includeMinimums && (
+          <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 leading-snug">
+            ⚠ Annual minimum not included — enable above
+          </p>
+        )}
       </div>
 
       {/* Cost breakdown rows */}
@@ -76,6 +82,9 @@ export function VendorCostCard({ breakdown: b, rank, totalVendors, windowLabel }
         {b.fixed.map(f => (
           <CostRow key={f.label} label={f.label} cost={f.cost} isFixed />
         ))}
+        {b.minimumCost && includeMinimums && (
+          <CostRow label="Commitment minimum" cost={b.total - b.subtotal - b.fixed.reduce((s, f) => s + f.cost, 0)} isFixed />
+        )}
       </div>
 
       {/* Warnings */}

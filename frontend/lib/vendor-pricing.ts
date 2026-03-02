@@ -28,6 +28,7 @@ export interface VendorConfig {
   fixed: Array<{ label: string; perMonth: number; note: string }>;
   warnings: string[];   // OTel-specific gotchas
   strengths: string[];  // Notable positives
+  commitmentMinimum?: { perYear: number; description: string };
 }
 
 // ─── Normalization assumptions ────────────────────────────────────────────────
@@ -146,6 +147,10 @@ export const VENDORS: VendorConfig[] = [
       'Davis AI for automatic anomaly detection',
       'Strong Kubernetes observability out of the box',
     ],
+    commitmentMinimum: {
+      perYear: 20_000,
+      description: 'Annual DPS contract minimum (~$20K/yr baseline before consumption)',
+    },
   },
   {
     vendor: 'Elastic',

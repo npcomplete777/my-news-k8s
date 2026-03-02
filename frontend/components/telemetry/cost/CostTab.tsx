@@ -12,6 +12,7 @@ export function CostTab() {
   const counts = useTelemetryCounts();
   const [windowIdx, setWindowIdx] = useState(2); // default: per month
   const [projectionScale, setProjectionScale] = useState(1);
+  const [includeMinimums, setIncludeMinimums] = useState(false);
 
   const window = TIME_WINDOWS[windowIdx];
 
@@ -31,7 +32,10 @@ export function CostTab() {
     };
   }, [counts, window.multiplier]);
 
-  const breakdowns = useMemo(() => calculateAllCosts(windowCounts), [windowCounts]);
+  const breakdowns = useMemo(
+    () => calculateAllCosts(windowCounts, { includeMinimums, windowMultiplier: window.multiplier }),
+    [windowCounts, includeMinimums, window.multiplier]
+  );
 
   const cheapest = [...breakdowns].sort((a, b) => a.total - b.total)[0];
   const mostExpensive = [...breakdowns].sort((a, b) => b.total - a.total)[0];
@@ -83,9 +87,29 @@ export function CostTab() {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setIncludeMinimums(m => !m)}
+            className={`rounded px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+              includeMinimums
+                ? 'bg-amber-500 text-white'
+                : 'bg-stone-100 text-stone-500 hover:bg-stone-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
+            }`}
+            title="Add annual contract minimums (e.g. Dynatrace DPS)"
+          >
+            {includeMinimums ? '✓ ' : '+ '}Commitment minimums
+          </button>
         </div>
 
-        <VendorCostGrid breakdowns={breakdowns} windowLabel={window.label.toLowerCase()} />
+        <VendorCostGrid breakdowns={breakdowns} windowLabel={window.label.toLowerCase()} includeMinimums={includeMinimums} />
+
+        <div className="flex justify-end">
+          <a
+            href="/telemetry/cost/methodology"
+            className="text-xs font-bold uppercase tracking-wider text-stone-400 hover:text-stone-700 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
+          >
+            Full methodology →
+          </a>
+        </div>
       </div>
 
       {/* Projection calculator */}

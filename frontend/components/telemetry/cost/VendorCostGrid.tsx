@@ -7,9 +7,10 @@ import { VendorCostCard } from './VendorCostCard';
 interface Props {
   breakdowns: VendorCostBreakdown[];
   windowLabel: string;
+  includeMinimums?: boolean;
 }
 
-export function VendorCostGrid({ breakdowns, windowLabel }: Props) {
+export function VendorCostGrid({ breakdowns, windowLabel, includeMinimums }: Props) {
   const sorted = useMemo(
     () => [...breakdowns].sort((a, b) => a.total - b.total),
     [breakdowns]
@@ -24,6 +25,7 @@ export function VendorCostGrid({ breakdowns, windowLabel }: Props) {
           rank={i + 1}
           totalVendors={sorted.length}
           windowLabel={windowLabel}
+          includeMinimums={includeMinimums}
         />
       ))}
     </div>

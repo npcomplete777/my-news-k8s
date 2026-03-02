@@ -36,7 +36,8 @@ export interface VendorCostBreakdown {
   traces: SignalCostLine;
   fixed: FixedCostLine[];
   subtotal: number; // signal costs only
-  total: number;    // signal + fixed
+  total: number;    // signal + fixed (+ commitment minimum if includeMinimums)
+  minimumCost?: { monthly: number; description: string };
   warnings: string[];
   strengths: string[];
 }
@@ -88,7 +89,7 @@ function calcDatadog(counts: SignalCounts, v: VendorConfig): VendorCostBreakdown
   };
 }
 
-function calcDynatrace(counts: SignalCounts, v: VendorConfig): VendorCostBreakdown {
+function calcDynatrace(counts: SignalCounts, v: VendorConfig, options?: { includeMinimums?: boolean; windowMultiplier?: number }): VendorCostBreakdown {
   const metricCost = (counts.metricDataPoints / v.metrics.unitSize) * v.metrics.ratePerUnit;
 
   const logGB = logsToGB(counts.logRecords) * 2; // enrichment 2x
@@ -96,6 +97,21 @@ function calcDynatrace(counts: SignalCounts, v: VendorConfig): VendorCostBreakdo
 
   const traceGB = spansToGB(counts.spans) * 1.5; // light enrichment
   const traceCost = traceGB * 0.20;
+
+  let total = metricCost + logCost + traceCost;
+  let minimumCost: VendorCostBreakdown['minimumCost'] | undefined;
+
+  if (v.commitmentMinimum) {
+    const monthlyMin = v.commitmentMinimum.perYear / 12;
+    minimumCost = { monthly: monthlyMin, description: v.commitmentMinimum.description };
+
+    if (options?.includeMinimums) {
+      // Pro-rate to selected window: 1440 = multiplier for 30-day month
+      const windowMultiplier = options.windowMultiplier ?? 1440;
+      const windowCost = monthlyMin * (windowMultiplier / 1440);
+      total += windowCost;
+    }
+  }
 
   return {
     vendor: v.vendor, shortName: v.shortName, color: v.color, pricingUrl: v.pricingUrl,
@@ -116,7 +132,8 @@ function calcDynatrace(counts: SignalCounts, v: VendorConfig): VendorCostBreakdo
     },
     fixed: [],
     subtotal: metricCost + logCost + traceCost,
-    total: metricCost + logCost + traceCost,
+    total,
+    minimumCost,
     warnings: v.warnings, strengths: v.strengths,
   };
 }
@@ -301,7 +318,15 @@ function calcDash0(counts: SignalCounts, v: VendorConfig): VendorCostBreakdown {
   };
 }
 
-const CALCULATORS: Record<string, (counts: SignalCounts, v: VendorConfig) => VendorCostBreakdown> = {
+export interface CalcOptions {
+  includeMinimums?: boolean;
+  windowMultiplier?: number;
+}
+
+type StandardCalc = (counts: SignalCounts, v: VendorConfig) => VendorCostBreakdown;
+type DynatraceCalc = (counts: SignalCounts, v: VendorConfig, options?: CalcOptions) => VendorCostBreakdown;
+
+const CALCULATORS: Record<string, StandardCalc | DynatraceCalc> = {
   'Datadog': calcDatadog,
   'Dynatrace': calcDynatrace,
   'Elastic': calcElastic,
@@ -311,12 +336,15 @@ const CALCULATORS: Record<string, (counts: SignalCounts, v: VendorConfig) => Ven
   'Dash0': calcDash0,
 };
 
-/** Calculate monthly costs for all vendors given monthly signal counts. */
-export function calculateAllCosts(monthlyCounts: SignalCounts): VendorCostBreakdown[] {
+/** Calculate costs for all vendors given window-scaled signal counts. */
+export function calculateAllCosts(windowCounts: SignalCounts, options?: CalcOptions): VendorCostBreakdown[] {
   return VENDORS.map(v => {
     const calc = CALCULATORS[v.vendor];
     if (!calc) return null;
-    return calc(monthlyCounts, v);
+    if (v.vendor === 'Dynatrace') {
+      return (calc as DynatraceCalc)(windowCounts, v, options);
+    }
+    return (calc as StandardCalc)(windowCounts, v);
   }).filter((x): x is VendorCostBreakdown => x !== null);
 }
 
