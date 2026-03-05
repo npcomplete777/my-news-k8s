@@ -53,7 +53,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [clickhouse]
+          exporters: [clickhouse, debug]
         metrics:
           receivers: [otlp]
           processors: [batch]

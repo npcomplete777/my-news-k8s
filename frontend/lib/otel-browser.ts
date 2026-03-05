@@ -152,10 +152,10 @@ export function initBrowserOtel(): void {
 
   provider.addSpanProcessor(new NotifyingSpanProcessor());
   provider.addSpanProcessor(
-    new BatchSpanProcessor(new OTLPTraceExporter({
-      url: '/api/otel/v1/traces',
-      headers: {}, // force XHR transport instead of sendBeacon
-    }))
+    new BatchSpanProcessor(
+      new OTLPTraceExporter({ url: '/api/otel/v1/traces' }),
+      { scheduledDelayMillis: 5000, maxExportBatchSize: 50 }
+    )
   );
 
   provider.register();

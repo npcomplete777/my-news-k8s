@@ -31,6 +31,10 @@ spec:
               value: "0.0.0.0"
             - name: NEXT_PUBLIC_API_URL
               value: "http://{{ include "o11y-news.fullname" . }}-backend:{{ .Values.backend.service.port }}"
+            - name: OTELCOL_URL
+              value: "http://otelcol:4318"
+            - name: NEXT_OTEL_VERBOSE
+              value: "0"
             - name: ADMIN_PASSWORD
               value: {{ .Values.frontend.adminPassword | quote }}
           resources:
