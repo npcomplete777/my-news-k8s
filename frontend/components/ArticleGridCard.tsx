@@ -9,9 +9,10 @@ interface ArticleGridCardProps {
 }
 
 export function ArticleGridCard({ article }: ArticleGridCardProps) {
-  const timeAgo = formatDistanceToNow(new Date(article.publishedAt), {
-    addSuffix: true,
-  });
+  const publishedDate = article.publishedAt ? new Date(article.publishedAt) : null;
+  const timeAgo = publishedDate && !isNaN(publishedDate.getTime())
+    ? formatDistanceToNow(publishedDate, { addSuffix: true })
+    : null;
 
   const bgClass = sourceColor(article.source);
 
@@ -55,7 +56,7 @@ export function ArticleGridCard({ article }: ArticleGridCardProps) {
         <span className={`badge text-[10px] ${bgClass}`}>
           {article.source}
         </span>
-        <span className="text-[10px] text-stone-400 dark:text-zinc-500">{timeAgo}</span>
+        {timeAgo && <span className="text-[10px] text-stone-400 dark:text-zinc-500">{timeAgo}</span>}
       </div>
 
       {/* Title */}

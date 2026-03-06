@@ -35,9 +35,10 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ article, onBookmarkToggle }: ArticleCardProps) {
-  const timeAgo = formatDistanceToNow(new Date(article.publishedAt), {
-    addSuffix: true,
-  });
+  const publishedDate = article.publishedAt ? new Date(article.publishedAt) : null;
+  const timeAgo = publishedDate && !isNaN(publishedDate.getTime())
+    ? formatDistanceToNow(publishedDate, { addSuffix: true })
+    : null;
 
   const bgClass = sourceColor(article.source);
 
@@ -108,7 +109,7 @@ export function ArticleCard({ article, onBookmarkToggle }: ArticleCardProps) {
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-zinc-500">
             {article.author && <span>by {article.author}</span>}
-            <span>{timeAgo}</span>
+            {timeAgo && <span>{timeAgo}</span>}
             <Link
               href={`/articles/${article.id}`}
               className="text-zinc-600 transition-colors hover:text-zinc-400"

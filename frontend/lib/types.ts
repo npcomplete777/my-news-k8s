@@ -5,7 +5,7 @@ export interface Article {
   url: string;
   author: string | null;
   contentSnippet: string | null;
-  publishedAt: string;
+  publishedAt: string | null;
   score: number;
   tags: string[];
   read: boolean;

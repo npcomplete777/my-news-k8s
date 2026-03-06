@@ -103,9 +103,11 @@ export default function ArticleDetailPage() {
               by <span className="text-zinc-400">{article.author}</span>
             </span>
           )}
-          <span>
-            {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
-          </span>
+          {article.publishedAt && (
+            <span>
+              {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+            </span>
+          )}
           {article.score > 0 && (
             <span className="flex items-center gap-1">
               <svg className="h-3.5 w-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
