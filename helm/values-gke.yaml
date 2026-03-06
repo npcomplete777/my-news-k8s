@@ -14,11 +14,11 @@ backend:
     JAVA_TOOL_OPTIONS: "-XX:+UseZGC -XX:MaxRAMPercentage=75.0 -javaagent:/otel-agent/opentelemetry-javaagent.jar"
   resources:
     requests:
-      cpu: 200m
-      memory: 768Mi
+      cpu: 100m
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 1536Mi
+      memory: 1024Mi
 frontend:
   replicas: 1
   image:
@@ -27,19 +27,19 @@ frontend:
     pullPolicy: Always
   resources:
     requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
       cpu: 100m
       memory: 128Mi
-    limits:
-      cpu: 250m
-      memory: 256Mi
 postgres:
   resources:
     requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
       cpu: 100m
       memory: 256Mi
-    limits:
-      cpu: 250m
-      memory: 512Mi
   storage:
     size: 5Gi
     storageClass: standard-rwo
@@ -64,11 +64,11 @@ localOtel:
     image: "otel/opentelemetry-collector-contrib:0.118.0"
     resources:
       requests:
-        cpu: 50m
-        memory: 64Mi
+        cpu: 10m
+        memory: 32Mi
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 50m
+        memory: 96Mi
   clickhouse:
     enabled: true
     image: "clickhouse/clickhouse-server:24.8-alpine"
@@ -77,10 +77,10 @@ localOtel:
       storageClassName: standard-rwo # GKE standard persistent disk (RWO)
     resources:
       requests:
-        cpu: 200m
+        cpu: 150m
         memory: 512Mi
       limits:
-        cpu: "1"
+        cpu: 750m
         memory: 1Gi
     auth:
       password: ""
