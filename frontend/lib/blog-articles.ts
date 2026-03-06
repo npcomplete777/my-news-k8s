@@ -14,53 +14,6 @@ export interface BlogArticle {
 // All O11y Alchemy blog articles except "The Derived Ontology" (featured in the hero carousel)
 export const BLOG_ARTICLES: BlogArticle[] = [
   {
-    id: 'autonomous-remediation-silent-checkout',
-    title: 'From 504 Timeout to 35ms: Autonomous Remediation of Silent Checkout Failures',
-    subtitle: 'A demonstration of fully autonomous code remediation: VALIS detected a critical silent checkout failure pattern, generated an async Kafka fix, deployed via GitOps, and validated a 4,700x latency improvement — all without human intervention.',
-    tags: ['Autonomous Remediation', 'VALIS', 'GitOps', 'Kafka', 'Observability'],
-    sections: [
-      {
-        heading: 'The Problem: Silent Order Failures',
-        paragraphs: [
-          'Users experienced a frustrating pattern: clicking "Place Order" triggered a 15+ second loading spinner followed by a 504 Gateway Timeout error. They believed their orders failed and retried, only to discover later they\'d been charged twice.',
-          'However, orders were actually succeeding. Payment was charged, confirmation emails were sent, and orders were processed. The checkout service was blocking on a Kafka write that took over 2 minutes, exceeding Envoy\'s 15-second timeout. Users saw failure while the backend saw success — a silent failure pattern.',
-          'VALIS detected this through trace analysis using Bayesian inference: request completes but client times out, blocking I/O in request path, Kafka write exceeds proxy timeout, successful downstream but 504 upstream. The smoking gun: sendToPostProcessor blocking for 142 seconds waiting for Kafka acknowledgment, while every other operation completed in milliseconds.',
-        ],
-      },
-      {
-        heading: 'The Fix: Async Fire-and-Forget',
-        paragraphs: [
-          'VALIS correlated the trace to source code using the service catalog and GitHub MCP server, identifying the problematic function in the checkout service. The blocking code was waiting for full Kafka acknowledgment — producer success or error — before returning a response to the user.',
-          'The fix: fire-and-forget with background acknowledgment handling. Queue the Kafka message and immediately return to the client. Handle the acknowledgment asynchronously in a goroutine with its own timeout. Log errors without failing the user\'s checkout.',
-          'The key insight: Kafka acknowledgment doesn\'t need to block the request path. The order is already complete — payment charged, email sent. The Kafka write is for downstream analytics and fraud detection. If it fails, it\'s logged without failing the user\'s checkout.',
-        ],
-      },
-      {
-        heading: 'Autonomous Execution',
-        paragraphs: [
-          'The entire remediation executed without human intervention across 13 steps: detect pattern in observability platform, correlate trace to source code, analyze codebase for the blocking select pattern, read the current function implementation, create a feature branch (valis/fix/async-kafka-checkout), generate and apply code changes (+49/-29 lines), verify compilation, commit with attribution, push to remote, create pull request, merge, deploy via GitOps, and validate the improvement in production telemetry.',
-          'Total human intervention: zero.',
-        ],
-      },
-      {
-        heading: 'Results',
-        paragraphs: [
-          'Kafka publish duration: from 165–198 seconds blocking to async non-blocking. Request latency: from 165+ seconds to 7–35ms — a 4,700x improvement. User experience: from 504 Gateway Timeout to immediate response. Double charge risk: eliminated. Pod restarts in a 30-minute window: from 44 OOMKilled events to zero.',
-          'The fix eliminated an entire class of user-facing failures. Orders that previously appeared to fail now complete successfully from the user\'s perspective.',
-        ],
-      },
-      {
-        heading: 'Architecture of Autonomy',
-        paragraphs: [
-          'What enabled this wasn\'t just AI capability — it was the architecture of perception and action. Perception Layer: the observability platform exposes spans as queryable data. Reasoning Layer: Bayesian inference over multiple evidence streams produces high-confidence pattern detection. Action Layer: local git operations enable code changes; source control integration enables automated PRs; GitOps systems deploy automatically. Verification Layer: the loop closes when the agent queries the observability platform again and confirms the fix worked.',
-          'This demonstration proves several things: autonomous remediation is possible today, not in research papers but in production with real code, real deployments, and real validation. Rich telemetry enables AI reasoning — without detailed traces showing the 142-second Kafka block, the pattern would be invisible. MCP is the integration layer — the Model Context Protocol enabled seamless connection between observability platforms, infrastructure management, source control, and deployment systems.',
-          'The real question: what happens to engineering when the feedback loop from "problem detected" to "fix validated" takes minutes instead of hours? The answer is still being written. But organizations building these closed-loop systems first will operate at fundamentally different speed than those that don\'t.',
-        ],
-      },
-    ],
-  },
-
-  {
     id: 'geometry-of-failure',
     title: 'The Geometry of Failure: Language-Agnostic Anti-Pattern Signatures in Distributed Trace Topology',
     subtitle: 'Anti-patterns in distributed systems produce characteristic geometric signatures in trace topology. I tested this hypothesis across Go, Python, and Java — and the geometry was identical every time.',
