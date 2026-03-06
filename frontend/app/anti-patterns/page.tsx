@@ -730,10 +730,7 @@ export default function AntiPatternsPage() {
               The Geometry of Failure
             </h1>
             <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl mb-6">
-              Anti-patterns in distributed systems produce characteristic geometric signatures
-              in trace topology space — invariant across programming languages, frameworks, and protocols.
-              The shape of the trace <em>is</em> the diagnosis. These 12 patterns were verified across
-              Go, Python, and Java with 99.9% Bayesian posterior confidence.
+              Anti-patterns in distributed systems produce characteristic geometric signatures in trace topology space.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <a
